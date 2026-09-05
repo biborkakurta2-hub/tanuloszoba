@@ -80,7 +80,7 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 .eyebrow{color:var(--accent);font-weight:600;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
 .page-head h1{font-size:34px;line-height:1.08}
 .page-head p{color:var(--muted);margin:8px 0 0;font-size:14.5px;max-width:60ch}
-.greet{font-family:"Caveat",cursive;font-size:30px;color:var(--accent);line-height:1;margin-bottom:2px}
+.greet{font-family:"Caveat",cursive;font-size:26px;color:var(--accent);line-height:1;margin-top:8px}
 
 .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;
   font-weight:600;font-size:13.5px;transition:transform .12s,box-shadow .15s,background .15s}
@@ -432,8 +432,8 @@ function viewHome(){
   let dl=up.slice(0,6).map(e=>deadlineRow(e)).join("")||`<div class="empty" style="padding:30px"><p>Nincs közelgő ZH vagy beadandó. Vedd fel egy tárgynál vagy a naptárban. ✨</p></div>`;
   return `<div class="wrap">
     <div class="page-head">
-      <div class="greet">Szia, ${esc(STATE.settings.name)}!</div>
-      <h1>${todayGreeting()}</h1>
+      <h1>Szia, ${esc(STATE.settings.name)}!</h1>
+      <div class="greet">${todayGreeting()}</div>
       <p>Itt minden egy helyen van: az iskoláid, a tárgyaid, a határidők és a jegyzeteid.</p>
     </div>
     ${tiles}
