@@ -38,7 +38,9 @@ input,textarea,select{font-family:inherit;color:inherit}
 h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-spacing:-.01em}
 
 /* ---------- App shell ---------- */
-.app{display:grid;grid-template-columns:250px 1fr;height:100%}
+.app{display:grid;grid-template-columns:250px minmax(0,1fr);height:100%}
+.scrim{position:fixed;inset:0;background:rgba(59,44,52,.32);z-index:39;opacity:0;pointer-events:none;transition:opacity .2s}
+.scrim.on{opacity:1;pointer-events:auto}
 .sidebar{
   background:linear-gradient(180deg,#FFF 0%,#FDF3F7 100%);
   border-right:1px solid var(--line);
@@ -73,7 +75,7 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 .side-foot{margin-top:auto;padding:12px 10px 4px;font-size:11px;color:var(--faint)}
 
 /* ---------- Main ---------- */
-.main{overflow-y:auto;position:relative;height:100%}
+.main{grid-column:2;overflow-y:auto;position:relative;height:100%;min-width:0}
 .topbar{display:none}
 .wrap{max-width:1080px;margin:0 auto;padding:34px 40px 90px}
 .page-head{margin-bottom:26px}
@@ -250,11 +252,10 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 
 /* responsive */
 @media(max-width:900px){
-  .app{grid-template-columns:1fr}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .main{grid-column:1}
   .sidebar{position:fixed;inset:0 auto 0 0;width:264px;transform:translateX(-102%);transition:transform .24s;box-shadow:var(--shadow-lg)}
   .sidebar.open{transform:none}
-  .scrim{position:fixed;inset:0;background:rgba(59,44,52,.32);z-index:39;opacity:0;pointer-events:none;transition:opacity .2s}
-  .scrim.on{opacity:1;pointer-events:auto}
   .topbar{display:flex;align-items:center;gap:12px;padding:12px 16px;position:sticky;top:0;background:rgba(251,244,246,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);z-index:30}
   .topbar b{font-family:"Fraunces",serif;font-weight:560;font-size:16px}
   .hamb{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink)}
