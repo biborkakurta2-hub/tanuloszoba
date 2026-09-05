@@ -219,6 +219,51 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 .pg-btn{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--surface-2);color:var(--muted)}
 .pg-btn:hover{background:var(--accent-soft);color:var(--accent-deep)}
 
+/* quick capture (gyorsjegyzet) */
+.qc{padding:18px 20px;margin-bottom:22px;border:1px solid var(--line-2);
+  background:linear-gradient(135deg,#fff 0%,#FEF3F8 100%)}
+.qc-head{display:flex;align-items:center;gap:9px;color:var(--accent-deep);font-weight:700;font-size:14px;margin-bottom:12px;flex-wrap:wrap}
+.qc-head span{color:var(--muted);font-weight:500;font-size:12.5px}
+.qc-row{display:flex;gap:10px;flex-wrap:wrap}
+.qc-input{flex:1;min-width:220px;border:1px solid var(--line-2);background:#fff;border-radius:12px;padding:12px 14px;font-size:14.5px;transition:border-color .12s,box-shadow .12s}
+.qc-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.qc-out{margin-top:12px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:24px}
+.qc-out b{color:var(--ink);font-size:13.5px}
+.qc-where{color:var(--muted)}
+.qc-chip{font-size:12px;color:var(--muted);background:var(--surface-2);border:1px dashed var(--line-2);padding:5px 10px;border-radius:20px}
+.qc-chip:hover{color:var(--accent-deep);border-color:var(--accent)}
+.qc-tag{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:7px;background:var(--surface-2);color:var(--muted)}
+.qn-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px dashed var(--line);font-size:13.5px}
+.qn-row:last-child{border-bottom:0}
+.qn-row .ts{color:var(--faint);font-size:11.5px;margin-left:auto;white-space:nowrap}
+
+/* heti nezet */
+.wk-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.wk-col{background:var(--surface-2);border:1px solid transparent;border-radius:12px;padding:8px;min-height:140px;cursor:pointer;transition:background .12s,border-color .12s}
+.wk-col:hover{background:#fff;border-color:var(--line-2)}
+.wk-col.today{background:var(--accent-soft);border-color:var(--accent)}
+.wk-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px;gap:6px}
+.wk-dow{font-size:10.5px;font-weight:700;color:var(--faint);letter-spacing:.05em;text-transform:uppercase}
+.wk-num{font-family:"Fraunces",serif;font-size:17px}
+.wk-col.today .wk-num{color:var(--accent-deep)}
+.wk-ev{background:#fff;border-radius:9px;padding:6px 8px;margin-bottom:6px;box-shadow:var(--shadow);cursor:pointer}
+.wk-ev b{display:block;font-size:11.5px;line-height:1.3;font-weight:600}
+.wk-ev span{font-size:10.5px;color:var(--muted)}
+.wk-ev.done b{text-decoration:line-through;color:var(--faint)}
+.wk-empty{color:var(--faint);font-size:12px;text-align:center;padding-top:8px}
+
+/* journaling */
+.mood{width:36px;height:36px;border-radius:11px;font-size:19px;display:grid;place-items:center;background:var(--surface-2);transition:.12s}
+.mood:hover{background:var(--accent-soft)}
+.mood.on{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
+.jr-prompt{font-family:"Fraunces",serif;font-size:17.5px;color:var(--accent-deep);margin:2px 0 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.jr-text{width:100%;min-height:270px;border:1px solid var(--line);background:var(--surface-2);border-radius:14px;padding:14px 16px;font-size:14.5px;line-height:1.75;resize:vertical;transition:border-color .12s}
+.jr-text:focus{outline:none;border-color:var(--accent);background:#fff}
+.jr-past{padding:14px 18px;margin-bottom:10px}
+.jr-past-head{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.jr-past-head b{font-family:"Fraunces",serif;font-size:15px;color:var(--ink);font-weight:560}
+.jr-past-body{margin-top:8px;font-size:13.5px;line-height:1.7;white-space:pre-wrap}
+
 /* empty state */
 .empty{text-align:center;padding:46px 20px;color:var(--muted)}
 .empty .em{width:64px;height:64px;border-radius:20px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:0 auto 14px}
@@ -265,6 +310,9 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
   .g-2{grid-template-columns:1fr}
   .cal-cell{min-height:56px;padding:5px}
   .cal-ev{display:none}
+  .wk-grid{grid-template-columns:1fr}
+  .wk-col{min-height:0}
+  .wk-empty{display:none}
   .note-bar{position:static}
 }
 </style>
@@ -326,7 +374,8 @@ const ic=(n,cls="ico")=>`<svg class="${cls}" width="18" height="18" viewBox="0 0
 const AREA_COLORS=["#C65B84","#9E7FC4","#7FA98C","#C79A6B","#5B9BC6","#D0798A"];
 
 /* ============ state ============ */
-let STATE, UI={view:"home",areaId:null,subjectId:null,clientId:null,tab:"targyak",cal:null};
+let STATE, UI={view:"diary",areaId:null,subjectId:null,clientId:null,tab:"targyak",cal:null,
+  diaryMode:"honap",week:null,qc:"",prompt:0};
 const KEY="biborka_hub_v1";
 let memoryOnly=false;
 
@@ -345,7 +394,9 @@ function seed(){
     clients:[
       {id:uid(),name:"Zita",contact:"",notes:"",tasks:[]},
       {id:uid(),name:"Euro Express",contact:"",notes:"",tasks:[]}
-    ]
+    ],
+    journal:[],
+    quicknotes:[]
   };
 }
 function load(){
@@ -355,7 +406,12 @@ function load(){
     STATE = raw?JSON.parse(raw):seed();
   }catch(e){ memoryOnly=true; STATE=seed(); }
   // ensure shape
-  STATE.areas.forEach(a=>a.subjects.forEach(s=>{s.notes=s.notes||{pages:[[]],cur:0};s.grades=s.grades||[];s.exams=s.exams||[];}));
+  STATE.settings=STATE.settings||{name:"Bíborka",workspace:"Tanulószoba"};
+  STATE.areas=STATE.areas||[]; STATE.clients=STATE.clients||[];
+  STATE.journal=STATE.journal||[]; STATE.quicknotes=STATE.quicknotes||[];
+  STATE.areas.forEach(a=>{a.events=a.events||[];a.subjects=a.subjects||[];
+    a.subjects.forEach(s=>{s.notes=s.notes||{pages:[[]],cur:0};s.grades=s.grades||[];s.exams=s.exams||[];});});
+  STATE.clients.forEach(c=>{c.tasks=c.tasks||[];});
 }
 function save(){
   if(memoryOnly)return;
@@ -384,7 +440,7 @@ function renderSidebar(){
       <div class="mono">${esc((STATE.settings.name||"B")[0])}</div>
       <div><b>${esc(STATE.settings.name)}</b><span>${esc(STATE.settings.workspace)}</span></div>
     </div>
-    <button class="nav-item ${UI.view==="home"?"active":""}" data-act="nav-home">${ic("home")} Kezdőlap</button>
+    <button class="nav-item ${UI.view==="diary"?"active":""}" data-act="nav-diary" style="--dot:var(--accent)">${ic("cal")} <span style="flex:1">Határidő napló</span><i class="ndot"></i></button>
     <div class="nav-label">Iskolák</div>`;
   STATE.areas.forEach(a=>{
     const act=UI.areaId===a.id&&(UI.view==="area"||UI.view==="subject");
@@ -401,10 +457,13 @@ function renderSidebar(){
   });
   h+=`<button class="nav-add" data-act="add-area">${ic("plus")} Új iskola / terület</button>
     <div class="nav-label">Munka</div>
-    <button class="nav-item ${UI.view==="clients"||UI.view==="client"?"active":""}" data-act="nav-clients" style="--dot:${STATE.clients[0]?"#C79A6B":"#C79A6B"}">${ic("users")} Ügyfelek</button>
+    <button class="nav-item ${UI.view==="clients"||UI.view==="client"?"active":""}" data-act="nav-clients" style="--dot:var(--gold)">${ic("users")} <span style="flex:1">Ügyfelek</span><i class="ndot"></i></button>
+    <div class="nav-label">Napló</div>
+    <button class="nav-item ${UI.view==="journal"?"active":""}" data-act="nav-journal" style="--dot:var(--lilac)">${ic("pen")} <span style="flex:1">Journaling</span><i class="ndot"></i></button>
     <div class="side-foot">Minden helyen · egy helyen 🌸</div>`;
   s.innerHTML=h;
-  $("#topTitle").textContent = UI.view==="home"?"Kezdőlap":
+  $("#topTitle").textContent = UI.view==="diary"?"Határidő napló":
+    UI.view==="journal"?"Journaling":
     UI.view==="clients"||UI.view==="client"?"Ügyfelek":
     (area(UI.areaId)?.name||"Tanulószoba");
 }
@@ -413,7 +472,8 @@ function renderSidebar(){
 function render(){
   renderSidebar();
   const v=$("#view");
-  if(UI.view==="home") v.innerHTML=viewHome();
+  if(UI.view==="diary") v.innerHTML=viewDiary();
+  else if(UI.view==="journal") v.innerHTML=viewJournal();
   else if(UI.view==="area") v.innerHTML=viewArea();
   else if(UI.view==="subject"){v.innerHTML=viewSubject(); initCanvas();}
   else if(UI.view==="clients") v.innerHTML=viewClients();
@@ -421,39 +481,70 @@ function render(){
   $(".main").scrollTop=0;
 }
 
-function viewHome(){
-  const up=allExams().filter(e=>dayDiff(e.date)>=0).sort((a,b)=>a.date<b.date?-1:1);
+function viewDiary(){
+  const up=allExams().filter(e=>!e.done&&dayDiff(e.date)>=0).sort((a,b)=>a.date<b.date?-1:1);
   const next=up[0];
-  const subjCount=STATE.areas.reduce((n,a)=>n+a.subjects.length,0);
-  let tiles=`<div class="tiles">
-    <div class="tile"><div class="k">Következő teendő</div><div class="v">${next?dayDiff(next.date)+" nap":"—"}</div><div class="s">${next?esc(next.title)+" · "+esc(next.subjName):"nincs beütemezve"}</div></div>
-    <div class="tile"><div class="k">Tárgyaid</div><div class="v">${subjCount}</div><div class="s">${STATE.areas.length} iskolában</div></div>
-    <div class="tile"><div class="k">Aktív ügyfél</div><div class="v">${STATE.clients.length}</div><div class="s">${STATE.clients.map(c=>esc(c.name)).join(", ")||"—"}</div></div>
-  </div>`;
-  let dl=up.slice(0,6).map(e=>deadlineRow(e)).join("")||`<div class="empty" style="padding:30px"><p>Nincs közelgő ZH vagy beadandó. Vedd fel egy tárgynál vagy a naptárban. ✨</p></div>`;
+  const thisWeek=up.filter(e=>dayDiff(e.date)<=7).length;
+  const openTasks=STATE.clients.reduce((n,c)=>n+c.tasks.filter(t=>!t.done).length,0);
   return `<div class="wrap">
     <div class="page-head">
       <h1>Szia, ${esc(STATE.settings.name)}!</h1>
       <div class="greet">${todayGreeting()}</div>
-      <p>Itt minden egy helyen van: az iskoláid, a tárgyaid, a határidők és a jegyzeteid.</p>
+      <p>Határidő napló — minden iskolád és ügyfeled teendője egyetlen naptárban.</p>
     </div>
-    ${tiles}
-    <div class="grid g-2">
-      <div class="card" style="padding:20px 22px">
-        <div class="sec-head"><h2>Közelgő határidők</h2><button class="btn btn-soft sm" data-act="add-exam-any">${ic("plus","")} Új</button></div>
-        <div class="dl">${dl}</div>
-      </div>
-      <div class="card" style="padding:20px 22px">
-        <div class="sec-head"><h2>Iskoláid</h2></div>
-        ${STATE.areas.map(a=>`<button class="nav-item" data-act="nav-area" data-id="${a.id}" style="--dot:${a.color};margin-bottom:4px">
-          <span style="width:10px;height:10px;border-radius:50%;background:${a.color};flex:0 0 auto"></span>
-          <span style="flex:1"><b style="font-family:'Fraunces',serif;font-weight:560">${esc(a.name)}</b><br><span style="font-size:12px;color:var(--muted)">${esc(a.subtitle||"")} · ${a.subjects.length} tárgy</span></span>
-          ${ic("chevR","")}</button>`).join("")}
-        <button class="nav-add" data-act="add-area" style="margin-top:6px">${ic("plus")} Új iskola hozzáadása</button>
-      </div>
+    ${quickCapture()}
+    <div class="tiles">
+      <div class="tile"><div class="k">Következő határidő</div><div class="v">${next?countLabel(next.date).txt:"—"}</div><div class="s">${next?esc(next.title)+" · "+esc(next.subjName):"nincs beütemezve"}</div></div>
+      <div class="tile"><div class="k">Ezen a héten</div><div class="v">${thisWeek}</div><div class="s">teendő 7 napon belül</div></div>
+      <div class="tile"><div class="k">Nyitott ügyfél-teendő</div><div class="v">${openTasks}</div><div class="s">${STATE.clients.length} ügyfélnél</div></div>
     </div>
+    <div class="card" style="padding:22px">
+      <div class="tabs" style="margin:0 0 18px">
+        <button class="tab ${UI.diaryMode==="honap"?"active":""}" data-act="diary-mode" data-m="honap">Havi nézet</button>
+        <button class="tab ${UI.diaryMode==="het"?"active":""}" data-act="diary-mode" data-m="het">Heti nézet</button>
+      </div>
+      ${UI.diaryMode==="het"?weekView(null):calendar(null)}
+    </div>
+    <div class="card" style="padding:20px 22px;margin-top:16px">
+      <div class="sec-head"><h2>Közelgő határidők</h2><button class="btn btn-soft sm" data-act="add-exam-any">${ic("plus","")} Új</button></div>
+      <div class="dl">${up.length?up.slice(0,8).map(deadlineRow).join("")
+        :`<div class="empty" style="padding:30px"><p>Nincs közelgő teendő. Írd be fentre, hogy „római jog zh okt 3.” — magától bekerül. ✨</p></div>`}</div>
+    </div>
+    ${STATE.quicknotes.length?`<div class="card" style="padding:20px 22px;margin-top:16px">
+      <div class="sec-head"><h2>Gyorsjegyzetek</h2><span style="font-size:12.5px;color:var(--muted)">dátum nélküli firkák</span></div>
+      ${STATE.quicknotes.slice().reverse().map(n=>`<div class="qn-row"><span>${esc(n.text)}</span>
+        <span class="ts">${esc(n.day||"")}</span>
+        <button class="mini-x" data-act="qn-del" data-nid="${n.id}">${ic("trash","")}</button></div>`).join("")}
+    </div>`:""}
   </div>`;
 }
+
+function weekView(areaId){
+  const anchor=UI.week?parse(UI.week):new Date();
+  const mon=new Date(anchor); mon.setDate(anchor.getDate()-((anchor.getDay()+6)%7));
+  const evs=allExams(areaId);
+  const days=[];for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);days.push(d);}
+  const last=days[6],tstr=todayStr();
+  const cols=days.map((d,i)=>{
+    const ds=fmt(d),list=evs.filter(e=>e.date===ds);
+    return `<div class="wk-col ${ds===tstr?"today":""}" data-act="cal-day" data-d="${ds}">
+      <div class="wk-head"><span class="wk-dow">${DOW[i]}</span><span class="wk-num">${d.getDate()}</span></div>
+      ${list.length?list.map(e=>`<div class="wk-ev ${e.done?"done":""}" style="border-left:3px solid ${e.color}"
+          ${e.subjId?`data-act="nav-subject" data-id="${e.areaId}" data-sid="${e.subjId}"`:`data-act="nav-area" data-id="${e.areaId}"`}>
+          <b>${esc(e.title)}</b><span>${TYPES[e.type]||""} · ${esc(e.subjName)}</span></div>`).join("")
+        :`<div class="wk-empty">—</div>`}
+    </div>`;
+  }).join("");
+  return `<div class="cal-head">
+      <button class="pg-btn" data-act="wk-prev">${ic("chevL","")}</button>
+      <div class="mon">${MONTHS_SHORT[mon.getMonth()]} ${mon.getDate()}. – ${MONTHS_SHORT[last.getMonth()]} ${last.getDate()}.</div>
+      <button class="pg-btn" data-act="wk-next">${ic("chevR","")}</button>
+      <button class="btn btn-soft sm" data-act="wk-today" style="margin-left:6px">Ez a hét</button>
+      <button class="btn btn-primary sm" data-act="${areaId?"add-exam-area":"add-exam-any"}" data-id="${areaId||""}" style="margin-left:auto">${ic("plus","")} Esemény</button>
+    </div>
+    <div class="wk-grid">${cols}</div>`;
+}
+
 function todayGreeting(){const h=new Date().getHours();return h<10?"Szép reggelt! ☕":h<18?"Jó tanulást ma is.":"Készen állsz az esti órákra?";}
 
 function deadlineRow(e){
@@ -587,6 +678,219 @@ function noteBar(){
     <button class="tool" data-act="note-undo" title="Visszavonás">${ic("undo","")}</button>
     <button class="tool" data-act="note-clear" title="Oldal törlése">${ic("trash","")}</button>
   </div>`;
+}
+
+/* ---------- gyorsjegyzet: magyar mondat -> naptar ---------- */
+const NOACC=x=>String(x||"").toLowerCase()
+  .replace(/[áà]/g,"a").replace(/[éè]/g,"e").replace(/[íì]/g,"i")
+  .replace(/[óöő]/g,"o").replace(/[úüű]/g,"u");
+const MON_KEYS=[["szept",8],["szep",8],["marc",2],["mar",2],["jan",0],["feb",1],["apr",3],
+  ["majus",4],["maj",4],["junius",5],["jun",5],["julius",6],["jul",6],["aug",7],["okt",9],["nov",10],["dec",11]];
+const MN=MON_KEYS.map(x=>x[0]).join("|");
+const monIdx=w=>{for(const k of MON_KEYS)if(w.startsWith(k[0]))return k[1];return -1;};
+const DOW_KEYS=[["hetfo",0],["kedd",1],["szerda",2],["csutortok",3],["pentek",4],["szombat",5],["vasarnap",6]];
+const DW=DOW_KEYS.map(x=>x[0]).join("|");
+const TYPE_WORDS=[
+  [/\b(zh|zarthelyi|zart\s?helyi|dolgozat|teszt|roppdolgozat)\b/,"zh"],
+  [/\b(beadando|hazi|essze|leadas|leadni|prezentacio|feladat)\b/,"beadando"],
+  [/\b(vizsga|kollokvium|szigorlat|alapvizsga|zarovizsga)\b/,"vizsga"],
+  [/\b(ora|orak|eloadas|szeminarium|konzultacio|talalkozo|megbeszeles|gyakorlat|hivas)\b/,"ora"]
+];
+function fixYear(dt){const t=new Date();t.setHours(0,0,0,0);if(dt<t)dt.setFullYear(dt.getFullYear()+1);return dt;}
+function findDate(f){
+  let m;
+  if((m=/\b(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})\.?/.exec(f)))
+    return{date:fmt(new Date(+m[1],+m[2]-1,+m[3])),s:m.index,e:m.index+m[0].length};
+  if((m=new RegExp("\\b("+MN+")[a-z]*\\.?\\s*(\\d{1,2})\\.?(?:-?[a-z]{1,3})?").exec(f))){
+    const mo=monIdx(m[1]),d=+m[2];
+    if(mo>=0&&d>=1&&d<=31)return{date:fmt(fixYear(new Date(new Date().getFullYear(),mo,d))),s:m.index,e:m.index+m[0].length};
+  }
+  if((m=new RegExp("\\b(\\d{1,2})\\.?\\s*("+MN+")[a-z]*\\.?").exec(f))){
+    const mo=monIdx(m[2]),d=+m[1];
+    if(mo>=0&&d>=1&&d<=31)return{date:fmt(fixYear(new Date(new Date().getFullYear(),mo,d))),s:m.index,e:m.index+m[0].length};
+  }
+  if((m=/\b(\d{1,2})[.\-\/](\d{1,2})\.?(?!\d)/.exec(f))){
+    const mo=+m[1]-1,d=+m[2];
+    if(mo>=0&&mo<=11&&d>=1&&d<=31)return{date:fmt(fixYear(new Date(new Date().getFullYear(),mo,d))),s:m.index,e:m.index+m[0].length};
+  }
+  const rel=(re,days)=>{const r=re.exec(f);if(!r)return null;const d=new Date();d.setDate(d.getDate()+days);
+    return{date:fmt(d),s:r.index,e:r.index+r[0].length};};
+  let r=rel(/\bholnaputan\b/,2)||rel(/\bholnap\b/,1)||rel(/\bma\b/,0)||rel(/\bmaig\b/,0);
+  if(r)return r;
+  if((m=/\b(\d{1,2})\s*nap(?:\s*mulva)?\b/.exec(f))){const d=new Date();d.setDate(d.getDate()+ +m[1]);
+    return{date:fmt(d),s:m.index,e:m.index+m[0].length};}
+  if((m=new RegExp("\\b(jovo|kovetkezo)?\\s*("+DW+")[a-z]*\\b").exec(f))){
+    const tgt=DOW_KEYS.find(k=>m[2].startsWith(k[0]))[1];
+    const cur=(new Date().getDay()+6)%7;
+    let delta=(tgt-cur+7)%7; if(m[1])delta=delta===0?7:delta+7;
+    const d=new Date();d.setDate(d.getDate()+delta);
+    return{date:fmt(d),s:m.index,e:m.index+m[0].length};
+  }
+  if((m=/\bjovo\s*het(?:en)?\b/.exec(f))){const d=new Date();d.setDate(d.getDate()+7);
+    return{date:fmt(d),s:m.index,e:m.index+m[0].length};}
+  return null;
+}
+function findType(f,dr){
+  for(const[re,t]of TYPE_WORDS){const m=re.exec(f);
+    if(m&&!(dr&&m.index<dr.e&&m.index+m[0].length>dr.s))return{type:t,s:m.index,e:m.index+m[0].length};}
+  return null;
+}
+function bestMatch(toks,cands){
+  let best=null,bs=0;
+  cands.forEach(c=>{
+    const n=NOACC(c.name), parts=n.split(/[^a-z0-9]+/).filter(w=>w.length>2);
+    let sc=0;
+    toks.forEach(t=>{if(t.length>2&&n.indexOf(t)>=0)sc+=2;});
+    parts.forEach(w=>{if(toks.some(t=>t.length>3&&w.indexOf(t.slice(0,5))===0))sc+=1;});
+    if(sc>bs){bs=sc;best=c;}
+  });
+  return bs>=2?{item:best,score:bs}:null;
+}
+function parseQuick(raw){
+  const text=String(raw||"").trim(); if(!text)return null;
+  const f=NOACC(text);
+  const dr=findDate(f), tr=findType(f,dr);
+  const words=[];let m;const re=/\S+/g;
+  while((m=re.exec(text)))words.push({w:m[0],s:m.index,e:m.index+m[0].length});
+  const hit=(w,r)=>r&&w.s<r.e&&w.e>r.s;
+  const rest=words.filter(w=>!hit(w,dr)&&!hit(w,tr));
+  const toks=rest.map(w=>NOACC(w.w).replace(/[^a-z0-9]/g,"")).filter(Boolean);
+  const subs=[];STATE.areas.forEach(a=>a.subjects.forEach(su=>subs.push({kind:"subject",areaId:a.id,subjId:su.id,name:su.name})));
+  const cls=STATE.clients.map(c=>({kind:"client",clientId:c.id,name:c.name}));
+  const bs=bestMatch(toks,subs), bc=bestMatch(toks,cls);
+  const tgt=(bs&&(!bc||bs.score>=bc.score))?bs:bc;
+  const nameToks=tgt?NOACC(tgt.item.name).split(/[^a-z0-9]+/).filter(Boolean):[];
+  let title=rest.filter(w=>{const t=NOACC(w.w).replace(/[^a-z0-9]/g,"");
+      return t&&!nameToks.some(n=>n===t||(t.length>2&&n.indexOf(t)===0));})
+    .map(w=>w.w).join(" ").replace(/^[\s:,;.\-–—]+/,"").replace(/[\s:,;.\-–—]+$/,"").trim();
+  if(!dr)return{kind:"note",title:text};
+  const type=tr?tr.type:"ora";
+  if(!title&&tr){const tw=text.slice(tr.s,tr.e).trim();if(tw)title=tw.length<=3?tw.toUpperCase():tw.charAt(0).toUpperCase()+tw.slice(1);}
+  if(tgt&&tgt.item.kind==="client")
+    return{kind:"client",clientId:tgt.item.clientId,date:dr.date,title:title||"Teendő"};
+  if(tgt&&tgt.item.kind==="subject")
+    return{kind:"subject",areaId:tgt.item.areaId,subjId:tgt.item.subjId,date:dr.date,type,title:title||TYPES[type]};
+  if(!STATE.areas.length)return{kind:"note",title:text};
+  return{kind:"area",areaId:STATE.areas[0].id,date:dr.date,type,title:title||TYPES[type]};
+}
+function qcOut(q){
+  const p=q&&q.trim()?parseQuick(q):null;
+  if(!p)return ["római jog zh okt 3.","beadandó holnap","vizsga jan 15.","Zita: számla péntek"]
+    .map(x=>`<button class="qc-chip" data-act="qc-fill" data-x="${esc(x)}">${esc(x)}</button>`).join("");
+  if(p.kind==="note")
+    return `<span class="qc-tag">Jegyzet</span> <span>Nem találtam dátumot — gyorsjegyzetként mentem:</span> <b>${esc(p.title)}</b>`;
+  const d=parse(p.date),c=countLabel(p.date);
+  const where=p.kind==="client"?`${esc(client(p.clientId).name)} · ügyfél-teendő`
+    :p.kind==="subject"?`${esc(subj(area(p.areaId),p.subjId).name)} · ${esc(area(p.areaId).name)}`
+    :`${esc(area(p.areaId).name)} · iskola-szintű`;
+  return `<span class="type-badge t-${p.kind==="client"?"beadando":p.type}">${p.kind==="client"?"Teendő":TYPES[p.type]}</span>
+    <b>${esc(p.title)}</b> <span class="qc-where">→ ${where}</span>
+    <span class="count ${c.cls}">${d.getFullYear()}. ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}. · ${c.txt}</span>`;
+}
+function quickCapture(){
+  const q=UI.qc||"";
+  return `<div class="card qc">
+    <div class="qc-head">${ic("spark","")} <b>Gyorsjegyzet</b>
+      <span>Írd le egy mondatban — magától a naptárba és a tárgyhoz kerül.</span></div>
+    <div class="qc-row">
+      <input id="qcInput" class="qc-input" data-bind="qc" value="${esc(q)}" autocomplete="off"
+        placeholder="pl. római jog zh okt 3.  ·  alkotmányjog beadandó jövő kedd  ·  Zita: számla péntek">
+      <button class="btn btn-primary" data-act="qc-add">${ic("check","")} Hozzáadás</button>
+    </div>
+    <div class="qc-out" id="qcPreview">${qcOut(q)}</div>
+  </div>`;
+}
+function focusQc(){const el=$("#qcInput");if(el){el.focus();try{el.setSelectionRange(el.value.length,el.value.length);}catch(e){}}}
+function qcCommit(){
+  const p=parseQuick(UI.qc);
+  if(!p)return;
+  if(p.kind==="note"){
+    STATE.quicknotes.push({id:uid(),text:p.title,day:todayStr()});
+    toast("Gyorsjegyzet elmentve.");
+  }else if(p.kind==="client"){
+    client(p.clientId).tasks.push({id:uid(),title:p.title,due:p.date,done:false});
+    toast(`Teendő ${client(p.clientId).name} ügyfélnél: ${p.title}`);
+  }else if(p.kind==="subject"){
+    const sj=subj(area(p.areaId),p.subjId);
+    sj.exams.push({id:uid(),title:p.title,type:p.type,date:p.date,done:false});
+    toast(`${TYPES[p.type]} felvéve: ${sj.name} · ${p.date}`);
+  }else{
+    addExamToArea(area(p.areaId),{id:uid(),title:p.title,type:p.type,date:p.date,done:false});
+    toast(`Esemény felvéve: ${area(p.areaId).name} · ${p.date}`);
+  }
+  UI.qc=""; save(); render(); focusQc();
+}
+
+/* ---------- journaling ---------- */
+const JR_PROMPTS=[
+  "Mi az a három dolog, amiért ma hálás vagy?",
+  "Mi az az egy dolog, ami ma sikerülhet, ha csak arra figyelsz?",
+  "Hogy érzed magad most — ítélkezés nélkül?",
+  "Mi nyomja a szíved? Írd ki magadból.",
+  "Mit engedhetsz el a mai naptól?",
+  "Kinek küldenél ma egy jó szót — és miért?",
+  "Mit tanultál tegnap magadról?",
+  "Mi az, amire ma büszke lehetsz, akármilyen apró?"
+];
+const MOODS=[["😊","jó"],["🙂","oké"],["😐","semleges"],["😕","fáradt"],["😞","nehéz"]];
+function journalEntry(date,create){
+  let e=STATE.journal.find(j=>j.date===date);
+  if(!e&&create){e={id:uid(),date,mood:"",text:""};STATE.journal.push(e);}
+  return e;
+}
+function journalStreak(){
+  const set=new Set(STATE.journal.filter(j=>(j.text||"").trim()).map(j=>j.date));
+  const d=new Date();let n=0;
+  if(!set.has(fmt(d)))d.setDate(d.getDate()-1);
+  while(set.has(fmt(d))){n++;d.setDate(d.getDate()-1);}
+  return n;
+}
+function viewJournal(){
+  const today=todayStr();
+  const e=journalEntry(today)||{date:today,mood:"",text:""};
+  const prompt=JR_PROMPTS[UI.prompt%JR_PROMPTS.length];
+  const d=parse(today);
+  const past=STATE.journal.filter(j=>j.date!==today&&((j.text||"").trim()||j.mood)).sort((a,b)=>a.date<b.date?1:-1);
+  const written=STATE.journal.filter(j=>(j.text||"").trim()).length;
+  return `<div class="wrap">
+    <div class="page-head">
+      <div class="eyebrow">${ic("pen","")} Napló</div>
+      <h1>Journaling</h1>
+      <p>Reggeli oldalak, esti gondolatok — ahogy épp jólesik. Minden a te eszközödön marad.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile"><div class="k">Sorozat</div><div class="v">${journalStreak()}</div><div class="s">egymást követő nap</div></div>
+      <div class="tile"><div class="k">Bejegyzés</div><div class="v">${written}</div><div class="s">összesen</div></div>
+      <div class="tile"><div class="k">Ma</div><div class="v" style="font-size:23px">${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}.</div><div class="s">${(e.text||"").trim()?"már írtál ma ✨":"még üres oldal"}</div></div>
+    </div>
+    <div class="card" style="padding:22px">
+      <div class="sec-head"><h2>Mai oldal</h2>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${MOODS.map(mo=>`<button class="mood ${e.mood===mo[0]?"on":""}" data-act="jr-mood" data-m="${mo[0]}" title="${mo[1]}">${mo[0]}</button>`).join("")}
+        </div>
+      </div>
+      <div class="jr-prompt">${esc(prompt)}
+        <button class="btn btn-soft sm" data-act="jr-prompt">Másik kérdés</button></div>
+      <textarea class="jr-text" data-bind="journal" data-date="${today}" placeholder="Írj szabadon… senki más nem látja.">${esc(e.text||"")}</textarea>
+    </div>
+    <div class="sec-head" style="margin:26px 0 12px"><h2>Korábbi oldalak</h2>
+      <span style="font-size:12.5px;color:var(--muted)">${past.length} bejegyzés</span></div>
+    ${past.length?past.map(j=>{const pd=parse(j.date);return `<div class="card jr-past">
+        <div class="jr-past-head"><b>${pd.getFullYear()}. ${MONTHS_SHORT[pd.getMonth()]} ${pd.getDate()}.</b>
+          <span style="font-size:16px">${j.mood||""}</span>
+          <button class="mini-x" data-act="jr-del" data-jid="${j.id}" style="margin-left:auto">${ic("trash","")}</button></div>
+        <div class="jr-past-body">${esc(j.text||"")}</div></div>`;}).join("")
+      :`<div class="card empty" style="padding:34px"><p>Még nincs korábbi bejegyzés — a mai az első. 🌸</p></div>`}
+  </div>`;
+}
+
+/* ---------- toast ---------- */
+let toastT=null;
+function toast(msg){
+  let b=$("#toast");
+  if(!b){b=document.createElement("div");b.className="banner";b.id="toast";document.body.appendChild(b);}
+  b.innerHTML=`✅ ${esc(msg)}`;
+  clearTimeout(toastT);toastT=setTimeout(()=>{b.remove();},3200);
 }
 
 /* ---------- clients ---------- */
@@ -754,7 +1058,8 @@ document.addEventListener("click",e=>{
   switch(act){
     case"sidebar-open":$("#sidebar").classList.add("open");$("#scrim").classList.add("on");break;
     case"sidebar-close":$("#sidebar").classList.remove("open");$("#scrim").classList.remove("on");break;
-    case"nav-home":UI={...UI,view:"home"};closeSide();render();break;
+    case"nav-diary":UI={...UI,view:"diary"};closeSide();render();break;
+    case"nav-journal":UI={...UI,view:"journal"};closeSide();render();break;
     case"nav-area":UI={...UI,view:"area",areaId:id,subjectId:null,tab:"targyak"};UI.cal=null;closeSide();render();break;
     case"nav-subject":UI={...UI,view:"subject",areaId:id,subjectId:sid};penSeen=false;closeSide();render();break;
     case"nav-clients":UI={...UI,view:"clients"};closeSide();render();break;
@@ -782,10 +1087,26 @@ document.addEventListener("click",e=>{
     case"toggle-task":{const c=client(UI.clientId);const tk=c.tasks.find(x=>x.id===t.dataset.tid);tk.done=!tk.done;go();break;}
     case"del-task":{const c=client(UI.clientId);c.tasks=c.tasks.filter(x=>x.id!==t.dataset.tid);go();break;}
 
+    case"diary-mode":UI.diaryMode=t.dataset.m;render();break;
+    case"wk-prev":case"wk-next":{const d=UI.week?parse(UI.week):new Date();
+      d.setDate(d.getDate()+(act==="wk-next"?7:-7));UI.week=fmt(d);render();break;}
+    case"wk-today":UI.week=null;render();break;
+
+    case"qc-add":qcCommit();break;
+    case"qc-fill":UI.qc=t.dataset.x;render();focusQc();break;
+    case"qn-del":STATE.quicknotes=STATE.quicknotes.filter(n=>n.id!==t.dataset.nid);go();break;
+
+    case"jr-mood":{const j=journalEntry(todayStr(),true);j.mood=j.mood===t.dataset.m?"":t.dataset.m;go();break;}
+    case"jr-prompt":UI.prompt=(UI.prompt+1)%JR_PROMPTS.length;render();break;
+    case"jr-del":if(confirm("Törlöd ezt a naplóbejegyzést?")){STATE.journal=STATE.journal.filter(j=>j.id!==t.dataset.jid);go();}break;
+
     case"cal-prev":UI.cal.m--;if(UI.cal.m<0){UI.cal.m=11;UI.cal.y--;}render();break;
     case"cal-next":UI.cal.m++;if(UI.cal.m>11){UI.cal.m=0;UI.cal.y++;}render();break;
     case"cal-today":{const n=new Date();UI.cal={y:n.getFullYear(),m:n.getMonth()};render();break;}
-    case"cal-day":{const a=area(UI.areaId);openExamModal(e2=>{addExamToArea(a,e2);go();},t.dataset.d,a);break;}
+    case"cal-day":{
+      if(UI.view==="diary"||!UI.areaId){openExamModal(null,t.dataset.d,null,true);}
+      else{const a=area(UI.areaId);openExamModal(e2=>{addExamToArea(a,e2);go();},t.dataset.d,a);}
+      break;}
 
     case"tool":TOOL.mode=t.dataset.tool;refreshBar();break;
     case"pen-color":TOOL.color=t.dataset.c;if(TOOL.mode==="eraser")TOOL.mode="pen";refreshBar();break;
@@ -796,6 +1117,9 @@ document.addEventListener("click",e=>{
     case"note-prev":{const s=curSubject();if(s.notes.cur>0){s.notes.cur--;save();render();}break;}
     case"note-next":{const s=curSubject();if(s.notes.cur<s.notes.pages.length-1){s.notes.cur++;save();render();}break;}
   }
+});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&e.target&&e.target.id==="qcInput"){e.preventDefault();qcCommit();}
 });
 function refreshBar(){const bar=$(".note-bar");if(bar)bar.outerHTML=noteBar();}
 function closeSide(){$("#sidebar").classList.remove("open");$("#scrim").classList.remove("on");}
@@ -821,6 +1145,8 @@ function addExamToArea(a,ev,subjId){
 document.addEventListener("input",e=>{
   const el=e.target.closest("[data-bind]");if(!el)return;
   const b=el.dataset.bind,val=el.value!==undefined?el.value:el.textContent;
+  if(b==="qc"){UI.qc=val;const pv=$("#qcPreview");if(pv)pv.innerHTML=qcOut(val);return;}
+  if(b==="journal"){journalEntry(el.dataset.date,true).text=val;clearTimeout(window.__sv);window.__sv=setTimeout(save,400);return;}
   if(b==="teacher")curSubject().teacher=val;
   else if(b==="contact")curSubject().contact=val;
   else if(b==="subj-name")curSubject().name=val;

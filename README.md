@@ -2,17 +2,40 @@
 
 Bíborka személyes tanulószobája — egyetlen, függőség nélküli HTML fájl.
 
-## Mit tud
+## Négy rész
 
-- **Iskolák / területek** — több képzés párhuzamosan, saját színnel.
-- **Tárgyak** — tanár, elérhetőség, jegyek és átlag, ZH-k és beadandók.
-- **Naptár** — havi nézet, iskolánként, a napra kattintva rögtön új esemény.
-- **Határidők** — visszaszámlálás a kezdőlapon és a tárgykártyákon.
-- **Ügyfelek** — kapcsolat, teendők határidővel, szabad szöveges jegyzet.
-- **Jegyzetfüzet** — kézírásos vászon (toll, szövegkiemelő, radír, oldalak),
-  Apple Pencil nyomásérzékenységgel; ha ceruzát érzékel, a tenyérérintést figyelmen kívül hagyja.
+1. **Határidő napló** — az összes iskola és ügyfél teendője egy naptárban,
+   **havi** és **heti** nézetben, visszaszámlálással. Itt van a **gyorsjegyzet** is.
+2. **Iskolák** — több képzés párhuzamosan, saját színnel; tárgyanként tanár,
+   elérhetőség, jegyek és átlag, ZH-k / beadandók, saját naptár és kézírásos jegyzetfüzet.
+3. **Munka → Ügyfelek** — kapcsolat, teendők határidővel, szabad szöveges jegyzet.
+4. **Journaling** — napi oldal hangulattal és váltogatható kérdésekkel,
+   sorozatszámlálóval és a korábbi oldalak listájával.
 
-Minden adat a böngésző `localStorage`-ában marad (kulcs: `biborka_hub_v1`), szerver nincs.
+## Gyorsjegyzet
+
+A határidő napló tetején egy mondatban le lehet írni a teendőt, és a helyére kerül:
+
+| amit beírsz | ahova kerül |
+|---|---|
+| `római jog zh okt 3.` | Római jog I. → ZH, október 3. |
+| `alkotmányjog beadandó holnap` | Alkotmányjog I. → Beadandó, holnap |
+| `büntetőeljárásjog vizsga jan 15.` | Büntetőeljárásjog → Vizsga, január 15. |
+| `Zita: számla péntek` | Zita ügyfél → teendő, péntekre |
+| `konzultáció 2026-10-20` | iskola-szintű esemény |
+| `vegyél tejet` | dátum nélkül → gyorsjegyzetek közé |
+
+Ért magyar dátumot hónapnévvel (`okt 3.`, `október 3-án`), számmal (`10.12`, `2026-10-20`),
+relatívan (`ma`, `holnap`, `3 nap múlva`) és napnévvel (`pénteken`, `jövő kedd`), felismeri a
+típust (ZH / beadandó / vizsga / óra), a tárgyat és az ügyfelet is. A felismerés a böngészőben
+fut, beépített magyar szabályokkal — nincs mögötte szerver, se API-kulcs.
+
+## Jegyzetfüzet
+
+Kézírásos vászon tárgyanként (toll, szövegkiemelő, radír, több oldal), Apple Pencil
+nyomásérzékenységgel; ha ceruzát érzékel, a tenyérérintést figyelmen kívül hagyja.
+
+Minden adat a böngésző `localStorage`-ában marad (kulcs: `biborka_hub_v1`) — szerver, fiók és feltöltés nincs.
 
 ## Használat
 
