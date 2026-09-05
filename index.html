@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FBF4F6">
+<meta name="apple-mobile-web-app-title" content="Tanulószoba">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<title>Bíborka · Tanulószoba</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400..600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF4F6; --surface:#FFFFFF; --surface-2:#FDF7FA;
+  --ink:#3B2C34; --muted:#9A8791; --faint:#C9B8C0;
+  --line:#F1E1E8; --line-2:#EAD7E0;
+  --accent:#C65B84; --accent-deep:#A23E67; --accent-soft:#FBE7EF;
+  --rose:#C65B84; --lilac:#9E7FC4; --gold:#C79A6B; --sage:#7FA98C;
+  --shadow:0 1px 2px rgba(96,44,66,.04), 0 12px 30px -14px rgba(150,60,100,.18);
+  --shadow-lg:0 30px 70px -30px rgba(130,50,90,.35);
+  --r:20px; --r-sm:13px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:"Plus Jakarta Sans",system-ui,sans-serif;
+  color:var(--ink); background:var(--bg);
+  -webkit-font-smoothing:antialiased; overflow:hidden;
+}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,textarea,select{font-family:inherit;color:inherit}
+::selection{background:var(--accent-soft)}
+h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-spacing:-.01em}
+
+/* ---------- App shell ---------- */
+.app{display:grid;grid-template-columns:250px 1fr;height:100%}
+.sidebar{
+  background:linear-gradient(180deg,#FFF 0%,#FDF3F7 100%);
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;padding:20px 14px;gap:6px;overflow-y:auto;
+  z-index:40;
+}
+.brand{display:flex;align-items:center;gap:11px;padding:6px 8px 14px}
+.brand .mono{
+  width:40px;height:40px;border-radius:13px;flex:0 0 auto;
+  background:linear-gradient(135deg,var(--rose),#E39BB7);
+  color:#fff;display:grid;place-items:center;font-family:"Fraunces",serif;font-size:22px;
+  box-shadow:0 8px 18px -8px rgba(198,91,132,.7);
+}
+.brand b{font-family:"Fraunces",serif;font-weight:560;font-size:17px;display:block;line-height:1.1}
+.brand span{font-size:11.5px;color:var(--muted)}
+.nav-label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
+  padding:14px 10px 5px;font-weight:600}
+.nav-item{
+  display:flex;align-items:center;gap:11px;width:100%;text-align:left;
+  padding:9px 11px;border-radius:12px;color:var(--ink);font-size:14px;font-weight:500;
+  transition:background .15s,color .15s;position:relative;
+}
+.nav-item:hover{background:var(--surface-2)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent-deep);font-weight:600}
+.nav-item.active .ndot{transform:scale(1)}
+.nav-item .ico{width:18px;height:18px;flex:0 0 auto;color:var(--muted)}
+.nav-item.active .ico{color:var(--accent)}
+.ndot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;margin-left:auto;background:var(--dot,var(--accent));transform:scale(0);transition:transform .18s}
+.nav-sub{margin-left:8px;border-left:1.5px solid var(--line-2);padding-left:6px}
+.nav-add{color:var(--muted);font-size:13px;padding:8px 11px;border-radius:11px;display:flex;gap:9px;align-items:center;width:100%}
+.nav-add:hover{background:var(--surface-2);color:var(--accent-deep)}
+.side-foot{margin-top:auto;padding:12px 10px 4px;font-size:11px;color:var(--faint)}
+
+/* ---------- Main ---------- */
+.main{overflow-y:auto;position:relative;height:100%}
+.topbar{display:none}
+.wrap{max-width:1080px;margin:0 auto;padding:34px 40px 90px}
+.page-head{margin-bottom:26px}
+.eyebrow{color:var(--accent);font-weight:600;font-size:13px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.page-head h1{font-size:34px;line-height:1.08}
+.page-head p{color:var(--muted);margin:8px 0 0;font-size:14.5px;max-width:60ch}
+.greet{font-family:"Caveat",cursive;font-size:30px;color:var(--accent);line-height:1;margin-bottom:2px}
+
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:12px;
+  font-weight:600;font-size:13.5px;transition:transform .12s,box-shadow .15s,background .15s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 10px 22px -12px var(--accent)}
+.btn-primary:hover{background:var(--accent-deep)}
+.btn-ghost{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.btn-ghost:hover{background:var(--surface-2)}
+.btn-soft{background:var(--accent-soft);color:var(--accent-deep)}
+.btn-soft:hover{filter:brightness(.98)}
+.btn.sm{padding:7px 12px;font-size:12.5px;border-radius:10px}
+.icon-btn{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;color:var(--muted);background:transparent}
+.icon-btn:hover{background:var(--surface-2);color:var(--accent-deep)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.grid{display:grid;gap:16px}
+.g-auto{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.g-3{grid-template-columns:repeat(3,1fr)}
+.g-2{grid-template-columns:1.4fr 1fr}
+
+/* Subject / area cards */
+.subj-card{padding:18px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow);cursor:pointer;transition:transform .16s,box-shadow .16s,border-color .16s;position:relative;overflow:hidden}
+.subj-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--line-2)}
+.subj-card .spine{position:absolute;inset:0 auto 0 0;width:5px;background:var(--c,var(--accent))}
+.subj-card h3{font-size:18px;margin:2px 0 3px;padding-left:6px}
+.subj-card .teacher{color:var(--muted);font-size:12.5px;padding-left:6px;min-height:16px}
+.subj-meta{display:flex;gap:8px;margin-top:16px;padding-left:6px;flex-wrap:wrap}
+.pill{font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:20px;background:var(--surface-2);color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+.pill.warn{background:#FFF1E9;color:#C57A46}
+.pill.grade{background:var(--accent-soft);color:var(--accent-deep)}
+.pill.dot::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+
+/* stat tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
+.tile{padding:18px 18px 16px;border-radius:var(--r);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.tile .k{font-size:12px;color:var(--muted);font-weight:600}
+.tile .v{font-family:"Fraunces",serif;font-size:30px;margin-top:4px;line-height:1}
+.tile .s{font-size:12px;color:var(--faint);margin-top:3px}
+
+/* deadline list */
+.dl{display:flex;flex-direction:column}
+.dl-row{display:flex;align-items:center;gap:14px;padding:14px 4px;border-bottom:1px solid var(--line)}
+.dl-row:last-child{border-bottom:0}
+.dl-date{width:52px;text-align:center;flex:0 0 auto}
+.dl-date .d{font-family:"Fraunces",serif;font-size:22px;line-height:1}
+.dl-date .m{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.dl-body{flex:1;min-width:0}
+.dl-body .t{font-weight:600;font-size:14px}
+.dl-body .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.count{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent-deep);white-space:nowrap;padding:5px 11px;background:var(--accent-soft);border-radius:20px}
+.count.soon{background:#FFECE8;color:#C64B3B}
+.count.today{background:var(--accent);color:#fff}
+
+.type-badge{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:7px;letter-spacing:.02em}
+.t-zh{background:#FDECF2;color:#C0396A}
+.t-beadando{background:#EEEAFB;color:#7659B8}
+.t-vizsga{background:#FFF0E3;color:#C1803B}
+.t-ora{background:#E9F5EE;color:#4E9068}
+
+/* tabs */
+.tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:14px;margin:22px 0 20px;width:max-content;max-width:100%}
+.tab{padding:8px 16px;border-radius:11px;font-size:13.5px;font-weight:600;color:var(--muted)}
+.tab.active{background:#fff;color:var(--accent-deep);box-shadow:var(--shadow)}
+
+/* section head */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 14px}
+.sec-head h2{font-size:20px}
+
+/* calendar */
+.cal-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.cal-head .mon{font-family:"Fraunces",serif;font-size:22px;min-width:190px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--faint);padding:4px 0;letter-spacing:.04em}
+.cal-cell{min-height:74px;border-radius:12px;background:var(--surface-2);border:1px solid transparent;padding:7px 8px;position:relative;cursor:pointer;transition:border-color .12s,background .12s}
+.cal-cell:hover{border-color:var(--line-2);background:#fff}
+.cal-cell.blank{background:transparent;cursor:default;border:0}
+.cal-cell.today{background:var(--accent-soft);border-color:var(--accent)}
+.cal-cell .num{font-size:12.5px;font-weight:600;color:var(--muted)}
+.cal-cell.today .num{color:var(--accent-deep)}
+.cal-dots{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+.cal-ev{font-size:10px;font-weight:600;padding:2px 5px;border-radius:6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;margin-top:3px}
+.cal-more{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* subject detail */
+.detail-head{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.detail-head .title-edit{font-family:"Fraunces",serif;font-size:30px;font-weight:560;border:0;background:transparent;outline:none;padding:2px 4px;border-radius:8px;min-width:200px}
+.detail-head .title-edit:focus{background:var(--accent-soft)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0 26px}
+.info-card{padding:16px 18px}
+.info-card h4{margin:0 0 12px;font-family:"Plus Jakarta Sans";font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.kv{display:flex;flex-direction:column;gap:9px}
+.field{display:flex;align-items:center;gap:8px}
+.field label{font-size:12px;color:var(--muted);width:64px;flex:0 0 auto}
+.field input{flex:1;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:8px 10px;font-size:13px;transition:border-color .12s}
+.field input:focus{outline:none;border-color:var(--accent);background:#fff}
+.list-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.list-row:last-child{border-bottom:0}
+.list-row .grow{flex:1;min-width:0}
+.list-row .tt{font-size:13.5px;font-weight:500}
+.list-row .dd{font-size:11.5px;color:var(--muted)}
+.chk{width:19px;height:19px;border-radius:6px;border:2px solid var(--line-2);flex:0 0 auto;display:grid;place-items:center;color:transparent;transition:.12s}
+.chk.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.done .tt{text-decoration:line-through;color:var(--faint)}
+.gtag{font-family:"Fraunces",serif;font-size:16px;font-weight:600;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-deep);flex:0 0 auto}
+.mini-x{color:var(--faint);width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:0 0 auto}
+.mini-x:hover{background:#FDECEF;color:#D0567A}
+
+/* notes / canvas */
+.notes{margin-top:8px}
+.note-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow);border-radius:16px;padding:8px 10px;position:sticky;top:10px;z-index:20}
+.tool{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:var(--muted);background:transparent;transition:.12s}
+.tool:hover{background:var(--surface-2)}
+.tool.active{background:var(--accent-soft);color:var(--accent-deep)}
+.swatch{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1.5px var(--line-2);transition:transform .1s}
+.swatch:hover{transform:scale(1.12)}
+.swatch.active{box-shadow:0 0 0 2px var(--accent);transform:scale(1.12)}
+.sep{width:1px;height:26px;background:var(--line);margin:0 2px}
+.sizes{display:flex;align-items:center;gap:6px}
+.size{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--surface-2)}
+.size.active{background:var(--accent-soft)}
+.size i{background:var(--ink);border-radius:20px;display:block}
+.note-stage{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:14px;overflow:hidden}
+.paper{
+  position:relative;width:100%;border-radius:10px;overflow:hidden;
+  background:#fff;
+  background-image:radial-gradient(circle, #EADDE4 1.1px, transparent 1.1px);
+  background-size:26px 26px;background-position:14px 14px;
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+.paper canvas{display:block;width:100%;height:auto;touch-action:none;aspect-ratio:1000/1400}
+.note-foot{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px;color:var(--muted);font-size:12.5px}
+.pg-btn{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--surface-2);color:var(--muted)}
+.pg-btn:hover{background:var(--accent-soft);color:var(--accent-deep)}
+
+/* empty state */
+.empty{text-align:center;padding:46px 20px;color:var(--muted)}
+.empty .em{width:64px;height:64px;border-radius:20px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:0 auto 14px}
+.empty h3{color:var(--ink);font-size:19px;margin-bottom:6px}
+.empty p{font-size:13.5px;max-width:38ch;margin:0 auto 16px}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(59,44,52,.34);backdrop-filter:blur(3px);z-index:100;display:grid;place-items:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .18s}
+.modal-bg.on{opacity:1;pointer-events:auto}
+.modal{background:var(--surface);border-radius:22px;box-shadow:var(--shadow-lg);width:min(440px,100%);padding:24px;transform:translateY(8px) scale(.98);transition:transform .2s}
+.modal-bg.on .modal{transform:none}
+.modal h3{font-size:21px;margin-bottom:16px}
+.mf{margin-bottom:13px}
+.mf label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.mf input,.mf select,.mf textarea{width:100%;border:1px solid var(--line-2);background:var(--surface-2);border-radius:11px;padding:11px 13px;font-size:14px;transition:border-color .12s}
+.mf input:focus,.mf select:focus,.mf textarea:focus{outline:none;border-color:var(--accent);background:#fff}
+.mf .row{display:flex;gap:10px}
+.swatch-row{display:flex;gap:9px;margin-top:2px}
+.swatch-pick{width:30px;height:30px;border-radius:10px;box-shadow:0 0 0 1.5px var(--line-2)}
+.swatch-pick.active{box-shadow:0 0 0 2px var(--ink)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* toast/banner */
+.banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+  padding:11px 16px;border-radius:13px;font-size:12.5px;box-shadow:var(--shadow-lg);z-index:120;max-width:92vw;
+  display:flex;align-items:center;gap:12px}
+.banner b{color:#FFD9E6}
+.banner button{color:#FFB8CE;font-weight:700}
+
+.hamb{display:none}
+
+/* responsive */
+@media(max-width:900px){
+  .app{grid-template-columns:1fr}
+  .sidebar{position:fixed;inset:0 auto 0 0;width:264px;transform:translateX(-102%);transition:transform .24s;box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:none}
+  .scrim{position:fixed;inset:0;background:rgba(59,44,52,.32);z-index:39;opacity:0;pointer-events:none;transition:opacity .2s}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .topbar{display:flex;align-items:center;gap:12px;padding:12px 16px;position:sticky;top:0;background:rgba(251,244,246,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);z-index:30}
+  .topbar b{font-family:"Fraunces",serif;font-weight:560;font-size:16px}
+  .hamb{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:var(--surface);box-shadow:var(--shadow);color:var(--ink)}
+  .wrap{padding:20px 18px 90px}
+  .page-head h1{font-size:27px}
+  .info-grid{grid-template-columns:1fr}
+  .g-2{grid-template-columns:1fr}
+  .cal-cell{min-height:56px;padding:5px}
+  .cal-ev{display:none}
+  .note-bar{position:static}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="scrim" id="scrim" data-act="sidebar-close"></div>
+  <main class="main">
+    <div class="topbar">
+      <button class="hamb" data-act="sidebar-open" aria-label="Menü">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <b id="topTitle">Tanulószoba</b>
+    </div>
+    <div id="view"></div>
+  </main>
+</div>
+<div class="modal-bg" id="modalBg"></div>
+
+<script>
+"use strict";
+/* ============ util ============ */
+const $ = (s,r=document)=>r.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = ()=>Math.random().toString(36).slice(2,9);
+const MONTHS=["január","február","március","április","május","június","július","augusztus","szeptember","október","november","december"];
+const MONTHS_SHORT=["jan","feb","már","ápr","máj","jún","júl","aug","szep","okt","nov","dec"];
+const DOW=["H","K","Sze","Cs","P","Szo","V"];
+const TYPES={zh:"ZH",beadando:"Beadandó",vizsga:"Vizsga",ora:"Óra"};
+const pad=n=>String(n).padStart(2,"0");
+const fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
+const todayStr=()=>fmt(new Date());
+function dayDiff(s){const a=parse(s);a.setHours(0,0,0,0);const b=new Date();b.setHours(0,0,0,0);return Math.round((a-b)/86400000);}
+function countLabel(s){const d=dayDiff(s);if(d<0)return{txt:`${-d} napja`,cls:""};if(d===0)return{txt:"Ma",cls:"today"};if(d===1)return{txt:"Holnap",cls:"soon"};if(d<=5)return{txt:`${d} nap`,cls:"soon"};return{txt:`${d} nap`,cls:""};}
+
+/* icons */
+const I={
+  home:'<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9h14v-9"/>',
+  book:'<path d="M5 4h11a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"/><path d="M9 4v14"/>',
+  users:'<circle cx="9" cy="8" r="3"/><path d="M3.5 20a5.5 5.5 0 0 1 11 0"/><path d="M16 6a3 3 0 0 1 0 6"/><path d="M20.5 20a5.5 5.5 0 0 0-3-4.9"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',
+  cal:'<rect x="4" y="5" width="16" height="16" rx="2.5"/><path d="M4 9h16M8 3v4M16 3v4"/>',
+  chevL:'<path d="M15 5l-7 7 7 7"/>',
+  chevR:'<path d="M9 5l7 7-7 7"/>',
+  trash:'<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>',
+  pen:'<path d="M15 4l5 5L8 21H3v-5z"/><path d="M13.5 6.5l4 4"/>',
+  hl:'<path d="M4 20h16"/><path d="M8 16l8-8 4 4-8 8H6l-2-2z"/>',
+  eraser:'<path d="M8 20H4l8-8 6 6-2 2z"/><path d="M12 12l6-6 4 4-6 6"/>',
+  undo:'<path d="M9 7 4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-3"/>',
+  check:'<path d="M5 12l5 5 9-11"/>',
+  grad:'<path d="M22 10 12 5 2 10l10 5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
+  clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'
+};
+const ic=(n,cls="ico")=>`<svg class="${cls}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+
+const AREA_COLORS=["#C65B84","#9E7FC4","#7FA98C","#C79A6B","#5B9BC6","#D0798A"];
+
+/* ============ state ============ */
+let STATE, UI={view:"home",areaId:null,subjectId:null,clientId:null,tab:"targyak",cal:null};
+const KEY="biborka_hub_v1";
+let memoryOnly=false;
+
+function seed(){
+  return {
+    settings:{name:"Bíborka",workspace:"Tanulószoba"},
+    areas:[
+      {id:uid(),name:"Este ÁJK",subtitle:"ELTE · Jog, esti",color:"#C65B84",
+        subjects:[
+          {id:uid(),name:"Római jog I.",color:"#C65B84",teacher:"",contact:"",grades:[],exams:[],notes:{pages:[[]],cur:0}},
+          {id:uid(),name:"Alkotmányjog I.",color:"#C65B84",teacher:"",contact:"",grades:[],exams:[],notes:{pages:[[]],cur:0}},
+          {id:uid(),name:"Büntetőeljárásjog",color:"#C65B84",teacher:"",contact:"",grades:[],exams:[],notes:{pages:[[]],cur:0}}
+        ],events:[]},
+      {id:uid(),name:"Óbudai Egyetem",subtitle:"Környezetmérnök",color:"#7FA98C",subjects:[],events:[]}
+    ],
+    clients:[
+      {id:uid(),name:"Zita",contact:"",notes:"",tasks:[]},
+      {id:uid(),name:"Euro Express",contact:"",notes:"",tasks:[]}
+    ]
+  };
+}
+function load(){
+  try{
+    const t="__t";localStorage.setItem(t,"1");localStorage.removeItem(t);
+    const raw=localStorage.getItem(KEY);
+    STATE = raw?JSON.parse(raw):seed();
+  }catch(e){ memoryOnly=true; STATE=seed(); }
+  // ensure shape
+  STATE.areas.forEach(a=>a.subjects.forEach(s=>{s.notes=s.notes||{pages:[[]],cur:0};s.grades=s.grades||[];s.exams=s.exams||[];}));
+}
+function save(){
+  if(memoryOnly)return;
+  try{localStorage.setItem(KEY,JSON.stringify(STATE));}
+  catch(e){memoryOnly=true;banner();}
+}
+
+/* ============ lookups ============ */
+const area=id=>STATE.areas.find(a=>a.id===id);
+const subj=(a,sid)=>a&&a.subjects.find(s=>s.id===sid);
+const client=id=>STATE.clients.find(c=>c.id===id);
+function allExams(filterArea){
+  const out=[];
+  STATE.areas.forEach(a=>{
+    if(filterArea&&a.id!==filterArea)return;
+    a.subjects.forEach(s=>s.exams.forEach(e=>out.push({...e,areaId:a.id,areaName:a.name,subjId:s.id,subjName:s.name,color:s.color||a.color})));
+    (a.events||[]).forEach(e=>out.push({...e,areaId:a.id,areaName:a.name,subjName:a.name,color:a.color}));
+  });
+  return out;
+}
+
+/* ============ sidebar ============ */
+function renderSidebar(){
+  const s=$("#sidebar");
+  let h=`<div class="brand">
+      <div class="mono">${esc((STATE.settings.name||"B")[0])}</div>
+      <div><b>${esc(STATE.settings.name)}</b><span>${esc(STATE.settings.workspace)}</span></div>
+    </div>
+    <button class="nav-item ${UI.view==="home"?"active":""}" data-act="nav-home">${ic("home")} Kezdőlap</button>
+    <div class="nav-label">Iskolák</div>`;
+  STATE.areas.forEach(a=>{
+    const act=UI.areaId===a.id&&(UI.view==="area"||UI.view==="subject");
+    h+=`<button class="nav-item ${act?"active":""}" data-act="nav-area" data-id="${a.id}" style="--dot:${a.color}">
+        ${ic("book")} <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(a.name)}</span><i class="ndot"></i></button>`;
+    if(act){
+      h+=`<div class="nav-sub">`;
+      a.subjects.forEach(su=>{
+        h+=`<button class="nav-item ${UI.subjectId===su.id?"active":""}" data-act="nav-subject" data-id="${a.id}" data-sid="${su.id}" style="--dot:${su.color||a.color};font-size:13px;padding:7px 11px">
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(su.name)}</span></button>`;
+      });
+      h+=`<button class="nav-add" data-act="add-subject" data-id="${a.id}" style="font-size:12.5px;padding:7px 11px">${ic("plus")} Tárgy</button></div>`;
+    }
+  });
+  h+=`<button class="nav-add" data-act="add-area">${ic("plus")} Új iskola / terület</button>
+    <div class="nav-label">Munka</div>
+    <button class="nav-item ${UI.view==="clients"||UI.view==="client"?"active":""}" data-act="nav-clients" style="--dot:${STATE.clients[0]?"#C79A6B":"#C79A6B"}">${ic("users")} Ügyfelek</button>
+    <div class="side-foot">Minden helyen · egy helyen 🌸</div>`;
+  s.innerHTML=h;
+  $("#topTitle").textContent = UI.view==="home"?"Kezdőlap":
+    UI.view==="clients"||UI.view==="client"?"Ügyfelek":
+    (area(UI.areaId)?.name||"Tanulószoba");
+}
+
+/* ============ views ============ */
+function render(){
+  renderSidebar();
+  const v=$("#view");
+  if(UI.view==="home") v.innerHTML=viewHome();
+  else if(UI.view==="area") v.innerHTML=viewArea();
+  else if(UI.view==="subject"){v.innerHTML=viewSubject(); initCanvas();}
+  else if(UI.view==="clients") v.innerHTML=viewClients();
+  else if(UI.view==="client") v.innerHTML=viewClient();
+  $(".main").scrollTop=0;
+}
+
+function viewHome(){
+  const up=allExams().filter(e=>dayDiff(e.date)>=0).sort((a,b)=>a.date<b.date?-1:1);
+  const next=up[0];
+  const subjCount=STATE.areas.reduce((n,a)=>n+a.subjects.length,0);
+  let tiles=`<div class="tiles">
+    <div class="tile"><div class="k">Következő teendő</div><div class="v">${next?dayDiff(next.date)+" nap":"—"}</div><div class="s">${next?esc(next.title)+" · "+esc(next.subjName):"nincs beütemezve"}</div></div>
+    <div class="tile"><div class="k">Tárgyaid</div><div class="v">${subjCount}</div><div class="s">${STATE.areas.length} iskolában</div></div>
+    <div class="tile"><div class="k">Aktív ügyfél</div><div class="v">${STATE.clients.length}</div><div class="s">${STATE.clients.map(c=>esc(c.name)).join(", ")||"—"}</div></div>
+  </div>`;
+  let dl=up.slice(0,6).map(e=>deadlineRow(e)).join("")||`<div class="empty" style="padding:30px"><p>Nincs közelgő ZH vagy beadandó. Vedd fel egy tárgynál vagy a naptárban. ✨</p></div>`;
+  return `<div class="wrap">
+    <div class="page-head">
+      <div class="greet">Szia, ${esc(STATE.settings.name)}!</div>
+      <h1>${todayGreeting()}</h1>
+      <p>Itt minden egy helyen van: az iskoláid, a tárgyaid, a határidők és a jegyzeteid.</p>
+    </div>
+    ${tiles}
+    <div class="grid g-2">
+      <div class="card" style="padding:20px 22px">
+        <div class="sec-head"><h2>Közelgő határidők</h2><button class="btn btn-soft sm" data-act="add-exam-any">${ic("plus","")} Új</button></div>
+        <div class="dl">${dl}</div>
+      </div>
+      <div class="card" style="padding:20px 22px">
+        <div class="sec-head"><h2>Iskoláid</h2></div>
+        ${STATE.areas.map(a=>`<button class="nav-item" data-act="nav-area" data-id="${a.id}" style="--dot:${a.color};margin-bottom:4px">
+          <span style="width:10px;height:10px;border-radius:50%;background:${a.color};flex:0 0 auto"></span>
+          <span style="flex:1"><b style="font-family:'Fraunces',serif;font-weight:560">${esc(a.name)}</b><br><span style="font-size:12px;color:var(--muted)">${esc(a.subtitle||"")} · ${a.subjects.length} tárgy</span></span>
+          ${ic("chevR","")}</button>`).join("")}
+        <button class="nav-add" data-act="add-area" style="margin-top:6px">${ic("plus")} Új iskola hozzáadása</button>
+      </div>
+    </div>
+  </div>`;
+}
+function todayGreeting(){const h=new Date().getHours();return h<10?"Szép reggelt! ☕":h<18?"Jó tanulást ma is.":"Készen állsz az esti órákra?";}
+
+function deadlineRow(e){
+  const d=parse(e.date),c=countLabel(e.date);
+  const nav = e.subjId ? `data-act="nav-subject" data-id="${e.areaId}" data-sid="${e.subjId}"` : `data-act="nav-area" data-id="${e.areaId}"`;
+  return `<div class="dl-row" ${nav}>
+    <div class="dl-date"><div class="d">${d.getDate()}</div><div class="m">${MONTHS_SHORT[d.getMonth()]}</div></div>
+    <div class="dl-body"><div class="t">${esc(e.title)}</div><div class="sub"><span class="type-badge t-${e.type}">${TYPES[e.type]||""}</span> &nbsp;${esc(e.subjName)} · ${esc(e.areaName)}</div></div>
+    <div class="count ${c.cls}">${c.txt}</div>
+  </div>`;
+}
+
+function viewArea(){
+  const a=area(UI.areaId); if(!a)return"";
+  const tab=UI.tab;
+  const head=`<div class="page-head">
+    <div class="eyebrow"><span style="width:9px;height:9px;border-radius:50%;background:${a.color};display:inline-block"></span>${esc(a.subtitle||"Iskola")}</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <h1 contenteditable data-bind="area-name" data-id="${a.id}" style="outline:none">${esc(a.name)}</h1>
+      <button class="icon-btn" data-act="del-area" data-id="${a.id}" title="Iskola törlése">${ic("trash","")}</button>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab ${tab==="targyak"?"active":""}" data-act="area-tab" data-tab="targyak">Tárgyak</button>
+    <button class="tab ${tab==="naptar"?"active":""}" data-act="area-tab" data-tab="naptar">Naptár</button>
+    <button class="tab ${tab==="teendok"?"active":""}" data-act="area-tab" data-tab="teendok">Teendők</button>
+  </div>`;
+  let body="";
+  if(tab==="targyak"){
+    body = a.subjects.length? `<div class="grid g-auto">`+a.subjects.map(s=>subjectCard(a,s)).join("")+
+      `<button class="subj-card" data-act="add-subject" data-id="${a.id}" style="display:grid;place-items:center;border-style:dashed;color:var(--muted);min-height:120px;cursor:pointer">
+        <div style="text-align:center">${ic("plus","")}<div style="margin-top:6px;font-weight:600">Tárgy hozzáadása</div></div></button></div>`
+      : emptyState("book","Még nincs tárgy","Vedd fel a félév tárgyait — mindegyikhez tartozik majd jegy, tanár, ZH és jegyzetfüzet.","Tárgy hozzáadása","add-subject",a.id);
+  } else if(tab==="naptar"){
+    body=`<div class="card" style="padding:22px">${calendar(a.id)}</div>`;
+  } else {
+    const list=allExams(a.id).sort((x,y)=>x.date<y.date?-1:1);
+    body=`<div class="card" style="padding:20px 22px">
+      <div class="sec-head"><h2>Minden teendő</h2><button class="btn btn-soft sm" data-act="add-exam-area" data-id="${a.id}">${ic("plus","")} Új teendő</button></div>
+      <div class="dl">${list.length?list.map(deadlineRow).join(""):'<div class="empty" style="padding:26px"><p>Nincs teendő ehhez az iskolához.</p></div>'}</div></div>`;
+  }
+  return `<div class="wrap">${head}${body}</div>`;
+}
+
+function subjectCard(a,s){
+  const up=[...s.exams].filter(e=>dayDiff(e.date)>=0).sort((x,y)=>x.date<y.date?-1:1)[0];
+  const avg=s.grades.length?(s.grades.reduce((n,g)=>n+Number(g.value||0),0)/s.grades.length).toFixed(1):null;
+  return `<div class="subj-card" data-act="nav-subject" data-id="${a.id}" data-sid="${s.id}" style="--c:${s.color||a.color}">
+    <div class="spine"></div>
+    <h3>${esc(s.name)}</h3>
+    <div class="teacher">${s.teacher?esc(s.teacher):"Tanár nincs megadva"}</div>
+    <div class="subj-meta">
+      ${up?`<span class="pill warn dot">${up.date===todayStr()?"Ma":dayDiff(up.date)+" nap"} · ${TYPES[up.type]}</span>`:`<span class="pill">Nincs közelgő ZH</span>`}
+      ${avg?`<span class="pill grade">${ic("grad","")} ${avg}</span>`:""}
+      <span class="pill">${s.notes.pages.length} oldal jegyzet</span>
+    </div>
+  </div>`;
+}
+
+function viewSubject(){
+  const a=area(UI.areaId); const s=subj(a,UI.subjectId); if(!s)return"";
+  const avg=s.grades.length?(s.grades.reduce((n,g)=>n+Number(g.value||0),0)/s.grades.length).toFixed(2):"—";
+  const exams=[...s.exams].sort((x,y)=>x.date<y.date?-1:1);
+  return `<div class="wrap">
+    <div class="eyebrow" style="margin-bottom:10px">${ic("chevL","")}<button data-act="nav-area" data-id="${a.id}" style="color:var(--accent);font-weight:600">${esc(a.name)}</button></div>
+    <div class="detail-head">
+      <input class="title-edit" data-bind="subj-name" value="${esc(s.name)}" />
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="icon-btn" data-act="del-subject" data-id="${a.id}" data-sid="${s.id}" title="Tárgy törlése">${ic("trash","")}</button>
+      </div>
+    </div>
+
+    <div class="info-grid">
+      <div class="card info-card">
+        <h4>Tanár & elérhetőség</h4>
+        <div class="kv">
+          <div class="field"><label>Tanár</label><input data-bind="teacher" placeholder="pl. Dr. Kovács Anna" value="${esc(s.teacher)}"></div>
+          <div class="field"><label>Elérhet.</label><input data-bind="contact" placeholder="e-mail / iroda / fogadóóra" value="${esc(s.contact)}"></div>
+        </div>
+        <h4 style="margin-top:18px">Jegyek <button class="btn btn-soft sm" data-act="add-grade">${ic("plus","")} Jegy</button></h4>
+        ${s.grades.length? s.grades.map(g=>`<div class="list-row">
+            <span class="gtag">${esc(g.value)}</span>
+            <div class="grow"><div class="tt">${esc(g.label||"Jegy")}</div></div>
+            <button class="mini-x" data-act="del-grade" data-gid="${g.id}">${ic("trash","")}</button></div>`).join("")
+          :`<div style="color:var(--faint);font-size:13px;padding:6px 0">Átlag: <b style="color:var(--accent-deep);font-family:'Fraunces',serif">${avg}</b> — még nincs jegy rögzítve.</div>`}
+        ${s.grades.length?`<div style="margin-top:10px;font-size:13px;color:var(--muted)">Átlag: <b style="color:var(--accent-deep);font-family:'Fraunces',serif;font-size:16px">${avg}</b></div>`:""}
+      </div>
+
+      <div class="card info-card">
+        <h4>ZH-k & beadandók <button class="btn btn-soft sm" data-act="add-exam-subj">${ic("plus","")} Új</button></h4>
+        ${exams.length? exams.map(e=>{const c=countLabel(e.date);const d=parse(e.date);return `<div class="list-row ${e.done?"done":""}">
+            <button class="chk ${e.done?"on":""}" data-act="toggle-exam" data-eid="${e.id}">${ic("check","")}</button>
+            <div class="grow"><div class="tt">${esc(e.title)} <span class="type-badge t-${e.type}">${TYPES[e.type]}</span></div>
+              <div class="dd">${d.getFullYear()}. ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}. ${e.done?"":"· <b style='color:var(--accent-deep)'>"+c.txt+"</b>"}</div></div>
+            <button class="mini-x" data-act="del-exam" data-eid="${e.id}">${ic("trash","")}</button></div>`;}).join("")
+          :`<div style="color:var(--faint);font-size:13px;padding:6px 0">Még nincs ZH vagy beadandó. Add hozzá, és megjelenik a naptárban is.</div>`}
+      </div>
+    </div>
+
+    <div class="notes">
+      <div class="sec-head"><h2 style="display:flex;align-items:center;gap:9px">${ic("pen","")} Jegyzetfüzet</h2>
+        <span style="font-size:12.5px;color:var(--muted)">Apple Pencillel is írható ✍️</span></div>
+      ${noteBar()}
+      <div class="note-stage">
+        <div class="paper"><canvas id="pad"></canvas></div>
+        <div class="note-foot">
+          <button class="pg-btn" data-act="note-prev">${ic("chevL","")}</button>
+          <span>Oldal <b id="pgNum">${s.notes.cur+1}</b> / <span id="pgTot">${s.notes.pages.length}</span></span>
+          <button class="pg-btn" data-act="note-next">${ic("chevR","")}</button>
+          <button class="btn btn-soft sm" data-act="note-addpage" style="margin-left:8px">${ic("plus","")} Új oldal</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+let TOOL={mode:"pen",color:"#3B2C34",size:2};
+const PEN_COLORS=["#3B2C34","#C65B84","#9E7FC4","#5B9BC6","#7FA98C","#C79A6B","#D64545"];
+function noteBar(){
+  return `<div class="note-bar">
+    <button class="tool ${TOOL.mode==="pen"?"active":""}" data-act="tool" data-tool="pen" title="Toll">${ic("pen","")}</button>
+    <button class="tool ${TOOL.mode==="hl"?"active":""}" data-act="tool" data-tool="hl" title="Szövegkiemelő">${ic("hl","")}</button>
+    <button class="tool ${TOOL.mode==="eraser"?"active":""}" data-act="tool" data-tool="eraser" title="Radír">${ic("eraser","")}</button>
+    <div class="sep"></div>
+    ${PEN_COLORS.map(c=>`<button class="swatch ${TOOL.color===c?"active":""}" data-act="pen-color" data-c="${c}" style="background:${c}"></button>`).join("")}
+    <div class="sep"></div>
+    <div class="sizes">
+      ${[{s:1.4,h:3},{s:2.4,h:5},{s:4,h:8}].map(o=>`<button class="size ${TOOL.size===o.s?"active":""}" data-act="pen-size" data-s="${o.s}"><i style="width:${o.h}px;height:${o.h}px"></i></button>`).join("")}
+    </div>
+    <div class="sep"></div>
+    <button class="tool" data-act="note-undo" title="Visszavonás">${ic("undo","")}</button>
+    <button class="tool" data-act="note-clear" title="Oldal törlése">${ic("trash","")}</button>
+  </div>`;
+}
+
+/* ---------- clients ---------- */
+function viewClients(){
+  return `<div class="wrap">
+    <div class="page-head"><div class="eyebrow"><span style="width:9px;height:9px;border-radius:50%;background:var(--gold);display:inline-block"></span>Munka</div>
+      <h1>Ügyfelek</h1><p>Külön kis műhely minden ügyfélnek: elérhetőség, teendők és jegyzetek.</p></div>
+    <div class="grid g-auto">
+      ${STATE.clients.map(c=>{const open=c.tasks.filter(t=>!t.done).length;return `<div class="subj-card" data-act="nav-client" data-id="${c.id}" style="--c:var(--gold)">
+        <div class="spine"></div><h3>${esc(c.name)}</h3>
+        <div class="teacher">${c.contact?esc(c.contact):"Nincs elérhetőség"}</div>
+        <div class="subj-meta">${open?`<span class="pill warn dot">${open} nyitott teendő</span>`:`<span class="pill">Minden kész ✨</span>`}</div></div>`;}).join("")}
+      <button class="subj-card" data-act="add-client" style="display:grid;place-items:center;border-style:dashed;color:var(--muted);min-height:120px">
+        <div style="text-align:center">${ic("plus","")}<div style="margin-top:6px;font-weight:600">Új ügyfél</div></div></button>
+    </div></div>`;
+}
+function viewClient(){
+  const c=client(UI.clientId); if(!c)return"";
+  const tasks=[...c.tasks].sort((a,b)=>(a.done-b.done)||((a.due||"9")<(b.due||"9")?-1:1));
+  return `<div class="wrap">
+    <div class="eyebrow" style="margin-bottom:10px">${ic("chevL","")}<button data-act="nav-clients" style="color:var(--accent);font-weight:600">Ügyfelek</button></div>
+    <div class="detail-head"><input class="title-edit" data-bind="client-name" value="${esc(c.name)}">
+      <div style="margin-left:auto"><button class="icon-btn" data-act="del-client" data-id="${c.id}" title="Törlés">${ic("trash","")}</button></div></div>
+    <div class="info-grid">
+      <div class="card info-card">
+        <h4>Elérhetőség</h4>
+        <div class="field"><label>Kapcsolat</label><input data-bind="client-contact" placeholder="e-mail / telefon / cég" value="${esc(c.contact)}"></div>
+        <h4 style="margin-top:18px">Teendők <button class="btn btn-soft sm" data-act="add-task">${ic("plus","")} Teendő</button></h4>
+        ${tasks.length?tasks.map(t=>`<div class="list-row ${t.done?"done":""}">
+            <button class="chk ${t.done?"on":""}" data-act="toggle-task" data-tid="${t.id}">${ic("check","")}</button>
+            <div class="grow"><div class="tt">${esc(t.title)}</div>${t.due?`<div class="dd">Határidő: ${esc(t.due)} · <b style="color:var(--accent-deep)">${countLabel(t.due).txt}</b></div>`:""}</div>
+            <button class="mini-x" data-act="del-task" data-tid="${t.id}">${ic("trash","")}</button></div>`).join("")
+          :`<div style="color:var(--faint);font-size:13px;padding:6px 0">Nincs teendő. 🎉</div>`}
+      </div>
+      <div class="card info-card">
+        <h4>Jegyzetek</h4>
+        <textarea data-bind="client-notes" placeholder="Bármi, amit el kell tárolni erről az ügyfélről — hozzáférések, ötletek, megbeszélt dolgok…" style="width:100%;min-height:230px;border:1px solid var(--line);background:var(--surface-2);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.6;resize:vertical">${esc(c.notes)}</textarea>
+      </div>
+    </div></div>`;
+}
+
+/* ---------- calendar ---------- */
+function calendar(areaId){
+  if(!UI.cal){const n=new Date();UI.cal={y:n.getFullYear(),m:n.getMonth()};}
+  const{y,m}=UI.cal;
+  const first=new Date(y,m,1);let start=(first.getDay()+6)%7; // Monday=0
+  const days=new Date(y,m+1,0).getDate();
+  const evs=allExams(areaId);
+  const byDay={};evs.forEach(e=>{if(e.date.startsWith(`${y}-${pad(m+1)}`)){const d=Number(e.date.slice(-2));(byDay[d]=byDay[d]||[]).push(e);}});
+  let cells="";
+  for(let i=0;i<start;i++)cells+=`<div class="cal-cell blank"></div>`;
+  const tstr=todayStr();
+  for(let d=1;d<=days;d++){
+    const ds=`${y}-${pad(m+1)}-${pad(d)}`;const list=byDay[d]||[];
+    let dots=list.slice(0,2).map(e=>`<span class="cal-ev t-${e.type}" title="${esc(e.title)}">${esc(e.title)}</span>`).join("");
+    if(list.length>2)dots+=`<span class="cal-more">+${list.length-2}</span>`;
+    if(list.length&&window.innerWidth<=900)dots=`<div class="cal-dots">${list.slice(0,4).map(e=>`<span style="width:6px;height:6px;border-radius:50%;background:${e.color}"></span>`).join("")}</div>`;
+    cells+=`<div class="cal-cell ${ds===tstr?"today":""}" data-act="cal-day" data-d="${ds}"><div class="num">${d}</div>${dots}</div>`;
+  }
+  return `<div class="cal-head">
+      <button class="pg-btn" data-act="cal-prev">${ic("chevL","")}</button>
+      <div class="mon">${MONTHS[m].charAt(0).toUpperCase()+MONTHS[m].slice(1)} ${y}</div>
+      <button class="pg-btn" data-act="cal-next">${ic("chevR","")}</button>
+      <button class="btn btn-soft sm" data-act="cal-today" style="margin-left:6px">Ma</button>
+      <button class="btn btn-primary sm" data-act="add-exam-area" data-id="${areaId}" style="margin-left:auto">${ic("plus","")} Esemény</button>
+    </div>
+    <div class="cal-grid">${DOW.map(d=>`<div class="cal-dow">${d}</div>`).join("")}${cells}</div>`;
+}
+
+function emptyState(icon,title,text,btn,act,id){
+  return `<div class="card empty"><div class="em">${ic(icon,"")}</div><h3>${title}</h3><p>${text}</p>
+    <button class="btn btn-primary" data-act="${act}" data-id="${id||""}">${ic("plus","")} ${btn}</button></div>`;
+}
+
+/* ============ modal ============ */
+function modal(title,fields,onSubmit){
+  const bg=$("#modalBg");
+  bg.innerHTML=`<div class="modal"><h3>${esc(title)}</h3><div id="mfields">
+    ${fields.map(f=>{
+      if(f.type==="select")return `<div class="mf"><label>${esc(f.label)}</label><select data-k="${f.key}">${f.options.map(o=>`<option value="${o.v}" ${o.v===f.value?"selected":""}>${esc(o.t)}</option>`).join("")}</select></div>`;
+      if(f.type==="color")return `<div class="mf"><label>${esc(f.label)}</label><div class="swatch-row">${AREA_COLORS.map((c,i)=>`<button type="button" class="swatch-pick ${i===0?"active":""}" data-color="${c}" style="background:${c}"></button>`).join("")}</div></div>`;
+      if(f.type==="textarea")return `<div class="mf"><label>${esc(f.label)}</label><textarea data-k="${f.key}" placeholder="${esc(f.ph||"")}">${esc(f.value||"")}</textarea></div>`;
+      return `<div class="mf"><label>${esc(f.label)}</label><input data-k="${f.key}" type="${f.type||"text"}" placeholder="${esc(f.ph||"")}" value="${esc(f.value||"")}"></div>`;
+    }).join("")}
+    </div>
+    <div class="modal-actions"><button class="btn btn-ghost" data-mclose>Mégse</button><button class="btn btn-primary" data-msubmit>Mentés</button></div></div>`;
+  let pickedColor=AREA_COLORS[0];
+  bg.querySelectorAll(".swatch-pick").forEach(b=>b.onclick=()=>{bg.querySelectorAll(".swatch-pick").forEach(x=>x.classList.remove("active"));b.classList.add("active");pickedColor=b.dataset.color;});
+  bg.classList.add("on");
+  const close=()=>{bg.classList.remove("on");setTimeout(()=>bg.innerHTML="",200);};
+  bg.querySelector("[data-mclose]").onclick=close;
+  bg.onclick=e=>{if(e.target===bg)close();};
+  const first=bg.querySelector("input,select,textarea");if(first)setTimeout(()=>first.focus(),60);
+  const submit=()=>{
+    const data={};bg.querySelectorAll("[data-k]").forEach(el=>data[el.dataset.k]=el.value.trim());
+    data.__color=pickedColor;
+    if(fields.some(f=>f.required)&&fields.filter(f=>f.required).some(f=>!data[f.key])){return;}
+    onSubmit(data);close();
+  };
+  bg.querySelector("[data-msubmit]").onclick=submit;
+  bg.querySelectorAll("input").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter")submit();}));
+}
+const examTypeField=(v="zh")=>({key:"type",label:"Típus",type:"select",value:v,options:[{v:"zh",t:"ZH / dolgozat"},{v:"beadando",t:"Beadandó"},{v:"vizsga",t:"Vizsga"},{v:"ora",t:"Óra / esemény"}]});
+
+/* ============ canvas engine ============ */
+let ctx,cvs,DPR=1,penSeen=false,drawing=false,cur=null,erasing=false;
+const LW=1000,LH=1400;
+function curSubject(){const a=area(UI.areaId);return subj(a,UI.subjectId);}
+function initCanvas(){
+  cvs=$("#pad");if(!cvs)return;
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  const setSize=()=>{cvs.width=LW*DPR;cvs.height=LH*DPR;ctx=cvs.getContext("2d");ctx.setTransform(DPR,0,0,DPR,0,0);ctx.lineCap="round";ctx.lineJoin="round";redraw();};
+  setSize();
+  const toLocal=e=>{const r=cvs.getBoundingClientRect();return{x:(e.clientX-r.left)*(LW/r.width),y:(e.clientY-r.top)*(LH/r.height),p:e.pressure&&e.pressure>0?e.pressure:0.5};};
+  cvs.onpointerdown=e=>{
+    if(e.pointerType==="pen")penSeen=true;
+    if(e.pointerType==="touch"&&penSeen)return;
+    e.preventDefault();cvs.setPointerCapture(e.pointerId);
+    const pt=toLocal(e);
+    if(TOOL.mode==="eraser"){erasing=true;eraseAt(pt);return;}
+    drawing=true;cur={tool:TOOL.mode,color:TOOL.color,size:TOOL.size,points:[pt]};
+  };
+  cvs.onpointermove=e=>{
+    if(e.pointerType==="touch"&&penSeen)return;
+    if(erasing){eraseAt(toLocal(e));return;}
+    if(!drawing)return;e.preventDefault();
+    const pt=toLocal(e),prev=cur.points[cur.points.length-1];cur.points.push(pt);drawSeg(cur,prev,pt);
+  };
+  const end=()=>{
+    if(erasing){erasing=false;save();return;}
+    if(!drawing)return;drawing=false;
+    if(cur.points.length){page().push(cur);save();}
+    cur=null;
+  };
+  cvs.onpointerup=end;cvs.onpointercancel=end;cvs.onpointerleave=end;
+}
+const page=()=>{const s=curSubject();return s.notes.pages[s.notes.cur];};
+function strokeStyle(st){
+  if(st.tool==="hl"){ctx.globalAlpha=0.28;ctx.globalCompositeOperation="multiply";return st.size*6;}
+  ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";return st.size;
+}
+function drawSeg(st,a,b){
+  const base=strokeStyle(st);
+  ctx.strokeStyle=st.color;
+  ctx.lineWidth= st.tool==="hl"?base : base*(0.5+((a.p+b.p)/2));
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";
+}
+function drawStroke(st){
+  if(st.points.length===1){const p=st.points[0];const base=strokeStyle(st);ctx.fillStyle=st.color;ctx.beginPath();ctx.arc(p.x,p.y,(st.tool==="hl"?base:base*(0.5+p.p))/2,0,7);ctx.fill();ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";return;}
+  for(let i=1;i<st.points.length;i++)drawSeg(st,st.points[i-1],st.points[i]);
+}
+function redraw(){if(!ctx)return;ctx.clearRect(0,0,LW,LH);page().forEach(drawStroke);}
+function eraseAt(pt){
+  const pg=page();const R=26;let changed=false;
+  for(let i=pg.length-1;i>=0;i--){if(pg[i].points.some(p=>Math.hypot(p.x-pt.x,p.y-pt.y)<R)){pg.splice(i,1);changed=true;}}
+  if(changed)redraw();
+}
+
+/* ============ event handling ============ */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-act]");if(!t)return;
+  const act=t.dataset.act,id=t.dataset.id,sid=t.dataset.sid;
+  const go=()=>{save();render();};
+  switch(act){
+    case"sidebar-open":$("#sidebar").classList.add("open");$("#scrim").classList.add("on");break;
+    case"sidebar-close":$("#sidebar").classList.remove("open");$("#scrim").classList.remove("on");break;
+    case"nav-home":UI={...UI,view:"home"};closeSide();render();break;
+    case"nav-area":UI={...UI,view:"area",areaId:id,subjectId:null,tab:"targyak"};UI.cal=null;closeSide();render();break;
+    case"nav-subject":UI={...UI,view:"subject",areaId:id,subjectId:sid};penSeen=false;closeSide();render();break;
+    case"nav-clients":UI={...UI,view:"clients"};closeSide();render();break;
+    case"nav-client":UI={...UI,view:"client",clientId:id};closeSide();render();break;
+    case"area-tab":UI.tab=t.dataset.tab;render();break;
+
+    case"add-area":modal("Új iskola / terület",[{key:"name",label:"Név",ph:"pl. Óbudai Egyetem",required:true},{key:"subtitle",label:"Alcím",ph:"pl. Környezetmérnök"},{type:"color",label:"Szín"}],d=>{STATE.areas.push({id:uid(),name:d.name,subtitle:d.subtitle,color:d.__color,subjects:[],events:[]});go();});break;
+    case"del-area":if(confirm("Biztosan törlöd ezt az iskolát és minden tárgyát?")){STATE.areas=STATE.areas.filter(a=>a.id!==id);UI={...UI,view:"home"};go();}break;
+
+    case"add-subject":{const aid=id||UI.areaId;const a=area(aid);modal("Új tárgy",[{key:"name",label:"Tárgy neve",ph:"pl. Polgári jog I.",required:true},{key:"teacher",label:"Tanár (opcionális)"}],d=>{a.subjects.push({id:uid(),name:d.name,teacher:d.teacher,contact:"",color:a.color,grades:[],exams:[],notes:{pages:[[]],cur:0}});go();});break;}
+    case"del-subject":if(confirm("Törlöd ezt a tárgyat a jegyzeteivel együtt?")){const a=area(id);a.subjects=a.subjects.filter(s=>s.id!==sid);UI={...UI,view:"area",subjectId:null};go();}break;
+
+    case"add-grade":{const s=curSubject();modal("Jegy rögzítése",[{key:"value",label:"Jegy (1–5)",type:"number",value:"5",required:true},{key:"label",label:"Mihez? (opcionális)",ph:"pl. 1. ZH"}],d=>{s.grades.push({id:uid(),value:d.value,label:d.label});go();});break;}
+    case"del-grade":{const s=curSubject();s.grades=s.grades.filter(g=>g.id!==t.dataset.gid);go();break;}
+
+    case"add-exam-subj":{const s=curSubject();openExamModal(e2=>{s.exams.push(e2);go();});break;}
+    case"add-exam-area":{const a=area(id||UI.areaId);openExamModal(e2=>{addExamToArea(a,e2);go();},null,a);break;}
+    case"add-exam-any":openExamModal(e2=>{const a=STATE.areas[0];addExamToArea(a,e2);go();},null,null,true);break;
+    case"toggle-exam":{const s=curSubject();const ex=s.exams.find(x=>x.id===t.dataset.eid);ex.done=!ex.done;go();break;}
+    case"del-exam":{const s=curSubject();s.exams=s.exams.filter(x=>x.id!==t.dataset.eid);go();break;}
+
+    case"add-client":modal("Új ügyfél",[{key:"name",label:"Név",ph:"pl. Kovács Kft.",required:true},{key:"contact",label:"Elérhetőség"}],d=>{STATE.clients.push({id:uid(),name:d.name,contact:d.contact,notes:"",tasks:[]});go();});break;
+    case"del-client":if(confirm("Törlöd ezt az ügyfelet?")){STATE.clients=STATE.clients.filter(c=>c.id!==id);UI={...UI,view:"clients"};go();}break;
+    case"add-task":{const c=client(UI.clientId);modal("Új teendő",[{key:"title",label:"Teendő",required:true},{key:"due",label:"Határidő (opcionális)",type:"date"}],d=>{c.tasks.push({id:uid(),title:d.title,due:d.due,done:false});go();});break;}
+    case"toggle-task":{const c=client(UI.clientId);const tk=c.tasks.find(x=>x.id===t.dataset.tid);tk.done=!tk.done;go();break;}
+    case"del-task":{const c=client(UI.clientId);c.tasks=c.tasks.filter(x=>x.id!==t.dataset.tid);go();break;}
+
+    case"cal-prev":UI.cal.m--;if(UI.cal.m<0){UI.cal.m=11;UI.cal.y--;}render();break;
+    case"cal-next":UI.cal.m++;if(UI.cal.m>11){UI.cal.m=0;UI.cal.y++;}render();break;
+    case"cal-today":{const n=new Date();UI.cal={y:n.getFullYear(),m:n.getMonth()};render();break;}
+    case"cal-day":{const a=area(UI.areaId);openExamModal(e2=>{addExamToArea(a,e2);go();},t.dataset.d,a);break;}
+
+    case"tool":TOOL.mode=t.dataset.tool;refreshBar();break;
+    case"pen-color":TOOL.color=t.dataset.c;if(TOOL.mode==="eraser")TOOL.mode="pen";refreshBar();break;
+    case"pen-size":TOOL.size=Number(t.dataset.s);refreshBar();break;
+    case"note-undo":{const pg=page();if(pg.length){pg.pop();redraw();save();}break;}
+    case"note-clear":if(page().length&&confirm("Törlöd ennek az oldalnak a tartalmát?")){const s=curSubject();s.notes.pages[s.notes.cur]=[];redraw();save();}break;
+    case"note-addpage":{const s=curSubject();s.notes.pages.push([]);s.notes.cur=s.notes.pages.length-1;save();render();break;}
+    case"note-prev":{const s=curSubject();if(s.notes.cur>0){s.notes.cur--;save();render();}break;}
+    case"note-next":{const s=curSubject();if(s.notes.cur<s.notes.pages.length-1){s.notes.cur++;save();render();}break;}
+  }
+});
+function refreshBar(){const bar=$(".note-bar");if(bar)bar.outerHTML=noteBar();}
+function closeSide(){$("#sidebar").classList.remove("open");$("#scrim").classList.remove("on");}
+function openExamModal(cb,date,areaObj,pickArea){
+  const fields=[{key:"title",label:"Megnevezés",ph:"pl. 1. zárthelyi",required:true},examTypeField(),{key:"date",label:"Dátum",type:"date",value:date||todayStr(),required:true}];
+  if(pickArea)fields.push({key:"area",label:"Iskola",type:"select",value:STATE.areas[0]?.id,options:STATE.areas.map(a=>({v:a.id,t:a.name}))});
+  if(areaObj&&areaObj.subjects.length)fields.splice(3,0,{key:"subj",label:"Tárgy (opcionális)",type:"select",value:"",options:[{v:"",t:"— iskola-szintű —"},...areaObj.subjects.map(s=>({v:s.id,t:s.name}))]});
+  modal("Új ZH / határidő",fields,d=>{
+    const ev={id:uid(),title:d.title,type:d.type,date:d.date,done:false};
+    if(pickArea){const a=area(d.area);addExamToArea(a,ev,d.subj);}
+    else if(d.subj){const s=subj(areaObj,d.subj);s.exams.push(ev);}
+    else cb(ev,d.subj);
+    if(pickArea||d.subj){save();render();}
+  });
+  if(!pickArea&&!(areaObj&&areaObj.subjects.length)){}
+}
+function addExamToArea(a,ev,subjId){
+  if(subjId){const s=subj(a,subjId);if(s){s.exams.push(ev);return;}}
+  (a.events=a.events||[]).push(ev);
+}
+
+/* bound inputs (live edit) */
+document.addEventListener("input",e=>{
+  const el=e.target.closest("[data-bind]");if(!el)return;
+  const b=el.dataset.bind,val=el.value!==undefined?el.value:el.textContent;
+  if(b==="teacher")curSubject().teacher=val;
+  else if(b==="contact")curSubject().contact=val;
+  else if(b==="subj-name")curSubject().name=val;
+  else if(b==="client-name")client(UI.clientId).name=val;
+  else if(b==="client-contact")client(UI.clientId).contact=val;
+  else if(b==="client-notes")client(UI.clientId).notes=val;
+  clearTimeout(window.__sv);window.__sv=setTimeout(save,400);
+});
+document.addEventListener("blur",e=>{
+  const el=e.target.closest("[data-bind='area-name']");if(el){area(el.dataset.id).name=el.textContent.trim()||"Névtelen";save();renderSidebar();}
+},true);
+
+/* banner for memory-only mode */
+function banner(){
+  if($("#bnr"))return;
+  const b=document.createElement("div");b.className="banner";b.id="bnr";
+  b.innerHTML=`✨ Ez az <b>előnézet</b> nem tud menteni. Töltsd le a fájlt / hostold, vagy iPaden add a kezdőképernyőhöz — akkor minden automatikusan mentődik.<button data-x>Értem</button>`;
+  document.body.appendChild(b);b.querySelector("[data-x]").onclick=()=>b.remove();
+}
+
+/* ============ start ============ */
+load();
+if(memoryOnly)setTimeout(banner,600);
+render();
+window.addEventListener("resize",()=>{if(UI.view==="subject")initCanvas();});
+</script>
+</body>
+</html>
