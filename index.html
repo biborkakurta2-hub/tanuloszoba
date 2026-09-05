@@ -383,7 +383,7 @@ function seed(){
   return {
     settings:{name:"Bíborka",workspace:"Tanulószoba"},
     areas:[
-      {id:uid(),name:"ELTE ÁJK",subtitle:"Jog · esti tagozat",color:"#C65B84",
+      {id:uid(),name:"ELTE ÁJK",subtitle:"Jog · levelező tagozat",color:"#C65B84",
         subjects:[
           {id:uid(),name:"Római jog I.",color:"#C65B84",teacher:"",contact:"",grades:[],exams:[],notes:{pages:[[]],cur:0}},
           {id:uid(),name:"Alkotmányjog I.",color:"#C65B84",teacher:"",contact:"",grades:[],exams:[],notes:{pages:[[]],cur:0}},
@@ -412,7 +412,10 @@ function load(){
   STATE.areas.forEach(a=>{a.events=a.events||[];a.subjects=a.subjects||[];
     a.subjects.forEach(s=>{s.notes=s.notes||{pages:[[]],cur:0};s.grades=s.grades||[];s.exams=s.exams||[];});});
   STATE.clients.forEach(c=>{c.tasks=c.tasks||[];});
-  STATE.areas.forEach(a=>{if(a.name==="Este ÁJK"){a.name="ELTE ÁJK";a.subtitle="Jog · esti tagozat";}});
+  STATE.areas.forEach(a=>{
+    if(a.name==="Este ÁJK")a.name="ELTE ÁJK";
+    if(a.name==="ELTE ÁJK"&&/esti/i.test(a.subtitle||""))a.subtitle="Jog · levelező tagozat";
+  });
 }
 function save(){
   if(memoryOnly)return;
