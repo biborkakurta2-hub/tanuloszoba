@@ -979,7 +979,7 @@ function viewClients(){
 }
 function viewClient(){
   const c=client(UI.clientId); if(!c)return"";
-  const tasks=[...c.tasks].sort((a,b)=>(a.done-b.done)||((a.due||"9")<(b.due||"9")?-1:1));
+  const tasks=[...c.tasks].sort((a,b)=>((a.due||"9999")<(b.due||"9999")?-1:1));
   return `<div class="wrap">
     <div class="eyebrow" style="margin-bottom:10px">${ic("chevL","")}<button data-act="nav-clients" style="color:var(--accent);font-weight:600">Ügyfelek</button></div>
     <div class="detail-head"><input class="title-edit" data-bind="client-name" value="${esc(c.name)}">
@@ -1081,7 +1081,7 @@ function openDayModal(){
   const ds=UI.day; if(!ds)return;
   const gen=openModalShell();
   const d=parse(ds), c=countLabel(ds);
-  const list=allExams().filter(e=>e.date===ds).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+  const list=allExams().filter(e=>e.date===ds);   // fix sorrend: a pipálás nem rendezi át
   const bg=$("#modalBg");
   bg.innerHTML=`<div class="modal" style="width:min(540px,100%)">
     <h3>${d.getFullYear()}. ${MONTHS[d.getMonth()]} ${d.getDate()}.</h3>
@@ -1330,7 +1330,12 @@ document.addEventListener("click",e=>{
     case"cal-today":{const n=new Date();UI.cal={y:n.getFullYear(),m:n.getMonth()};render();break;}
     case"cal-day":UI.day=t.dataset.d;openDayModal();break;
     case"day-add":openExamModal(null,UI.day,null,true);break;
-    case"day-toggle":{const f=findEvent(t.dataset.eid);if(f){f.ev.done=!f.ev.done;save();render();openDayModal();}break;}
+    case"day-toggle":{const f=findEvent(t.dataset.eid);
+      if(f){f.ev.done=!f.ev.done;save();
+        const row=t.closest(".list-row");
+        if(row){row.classList.toggle("done",!!f.ev.done);t.classList.toggle("on",!!f.ev.done);}
+        render();}                    // a háttérben lévő naptár frissül, a nyitott lap nem ugrik
+      break;}
     case"day-del":{const f=findEvent(t.dataset.eid);
       if(f&&confirm("Törlöd ezt a teendőt?")){const i=f.list.indexOf(f.ev);if(i>=0)f.list.splice(i,1);save();render();openDayModal();}
       break;}
