@@ -253,9 +253,13 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 .wk-empty{color:var(--faint);font-size:12px;text-align:center;padding-top:8px}
 
 /* journaling */
-.mood{width:36px;height:36px;border-radius:11px;font-size:19px;display:grid;place-items:center;background:var(--surface-2);transition:.12s}
-.mood:hover{background:var(--accent-soft)}
-.mood.on{background:var(--accent-soft);box-shadow:0 0 0 2px var(--accent)}
+.mood{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted);
+  background:var(--surface-2);padding:7px 12px;border-radius:20px;transition:.12s}
+.mood i{width:8px;height:8px;border-radius:50%;background:var(--mc);display:block}
+.mood:hover{color:var(--ink)}
+.mood.on{color:var(--ink);background:#fff;box-shadow:0 0 0 1.5px var(--mc)}
+.mood-dot{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.mood-dot i{width:8px;height:8px;border-radius:50%;background:var(--mc);display:block}
 .jr-prompt{font-family:"Fraunces",serif;font-size:17.5px;color:var(--accent-deep);margin:2px 0 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .jr-text{width:100%;min-height:270px;border:1px solid var(--line);background:var(--surface-2);border-radius:14px;padding:14px 16px;font-size:14.5px;line-height:1.75;resize:vertical;transition:border-color .12s}
 .jr-text:focus{outline:none;border-color:var(--accent);background:#fff}
@@ -375,7 +379,7 @@ const AREA_COLORS=["#C65B84","#9E7FC4","#7FA98C","#C79A6B","#5B9BC6","#D0798A"];
 
 /* ============ state ============ */
 let STATE, UI={view:"diary",areaId:null,subjectId:null,clientId:null,tab:"targyak",cal:null,
-  diaryMode:"honap",week:null,qc:"",prompt:0};
+  diaryMode:"honap",week:null,qc:"",prompt:0,jrMode:"text",jrPrompt:false};
 const KEY="biborka_hub_v1";
 let memoryOnly=false;
 
@@ -409,6 +413,8 @@ function load(){
   STATE.settings=STATE.settings||{name:"Bíborka",workspace:"Tanulószoba"};
   STATE.areas=STATE.areas||[]; STATE.clients=STATE.clients||[];
   STATE.journal=STATE.journal||[]; STATE.quicknotes=STATE.quicknotes||[];
+  STATE.journal.forEach(j=>{j.notes=j.notes||{pages:[[]],cur:0};
+    if(j.mood&&OLD_MOOD[j.mood])j.mood=OLD_MOOD[j.mood];});
   STATE.areas.forEach(a=>{a.events=a.events||[];a.subjects=a.subjects||[];
     a.subjects.forEach(s=>{s.notes=s.notes||{pages:[[]],cur:0};s.grades=s.grades||[];s.exams=s.exams||[];});});
   STATE.clients.forEach(c=>{c.tasks=c.tasks||[];});
@@ -477,7 +483,7 @@ function render(){
   renderSidebar();
   const v=$("#view");
   if(UI.view==="diary") v.innerHTML=viewDiary();
-  else if(UI.view==="journal") v.innerHTML=viewJournal();
+  else if(UI.view==="journal"){v.innerHTML=viewJournal(); if(UI.jrMode==="kez")initCanvas();}
   else if(UI.view==="area") v.innerHTML=viewArea();
   else if(UI.view==="subject"){v.innerHTML=viewSubject(); initCanvas();}
   else if(UI.view==="clients") v.innerHTML=viewClients();
@@ -836,14 +842,19 @@ const JR_PROMPTS=[
   "Mit tanultál tegnap magadról?",
   "Mi az, amire ma büszke lehetsz, akármilyen apró?"
 ];
-const MOODS=[["😊","jó"],["🙂","oké"],["😐","semleges"],["😕","fáradt"],["😞","nehéz"]];
+const MOODS=[["jo","jó","#7FA98C"],["ok","oké","#9E7FC4"],["semleges","semleges","#C9B8C0"],
+  ["faradt","fáradt","#C79A6B"],["nehez","nehéz","#C65B84"]];
+const moodOf=k=>MOODS.find(m=>m[0]===k);
+const OLD_MOOD={"😊":"jo","🙂":"ok","😐":"semleges","😕":"faradt","😞":"nehez"};
 function journalEntry(date,create){
   let e=STATE.journal.find(j=>j.date===date);
-  if(!e&&create){e={id:uid(),date,mood:"",text:""};STATE.journal.push(e);}
+  if(!e&&create){e={id:uid(),date,mood:"",text:"",notes:{pages:[[]],cur:0}};STATE.journal.push(e);}
+  if(e&&!e.notes)e.notes={pages:[[]],cur:0};
   return e;
 }
+const jrHasInk=j=>!!(j.notes&&j.notes.pages.some(pg=>pg.length));
 function journalStreak(){
-  const set=new Set(STATE.journal.filter(j=>(j.text||"").trim()).map(j=>j.date));
+  const set=new Set(STATE.journal.filter(j=>(j.text||"").trim()||jrHasInk(j)).map(j=>j.date));
   const d=new Date();let n=0;
   if(!set.has(fmt(d)))d.setDate(d.getDate()-1);
   while(set.has(fmt(d))){n++;d.setDate(d.getDate()-1);}
@@ -851,11 +862,24 @@ function journalStreak(){
 }
 function viewJournal(){
   const today=todayStr();
-  const e=journalEntry(today)||{date:today,mood:"",text:""};
-  const prompt=JR_PROMPTS[UI.prompt%JR_PROMPTS.length];
+  const e=journalEntry(today)||{date:today,mood:"",text:"",notes:{pages:[[]],cur:0}};
   const d=parse(today);
-  const past=STATE.journal.filter(j=>j.date!==today&&((j.text||"").trim()||j.mood)).sort((a,b)=>a.date<b.date?1:-1);
-  const written=STATE.journal.filter(j=>(j.text||"").trim()).length;
+  const past=STATE.journal.filter(j=>j.date!==today&&((j.text||"").trim()||j.mood||jrHasInk(j))).sort((a,b)=>a.date<b.date?1:-1);
+  const written=STATE.journal.filter(j=>(j.text||"").trim()||jrHasInk(j)).length;
+  const kez=UI.jrMode==="kez";
+  const showQ=!!UI.jrPrompt;
+  const body = kez
+    ? `${noteBar()}
+      <div class="note-stage" style="padding:0;border:0;box-shadow:none;margin-top:12px">
+        <div class="paper"><canvas id="pad"></canvas></div>
+        <div class="note-foot">
+          <button class="pg-btn" data-act="note-prev">${ic("chevL","")}</button>
+          <span>Oldal <b>${(e.notes.cur||0)+1}</b> / <span>${e.notes.pages.length}</span></span>
+          <button class="pg-btn" data-act="note-next">${ic("chevR","")}</button>
+          <button class="btn btn-soft sm" data-act="note-addpage" style="margin-left:8px">${ic("plus","")} Új oldal</button>
+        </div>
+      </div>`
+    : `<textarea class="jr-text" data-bind="journal" data-date="${today}" placeholder="Írj szabadon… senki más nem látja.">${esc(e.text||"")}</textarea>`;
   return `<div class="wrap">
     <div class="page-head">
       <div class="eyebrow">${ic("pen","")} Napló</div>
@@ -865,26 +889,33 @@ function viewJournal(){
     <div class="tiles">
       <div class="tile"><div class="k">Sorozat</div><div class="v">${journalStreak()}</div><div class="s">egymást követő nap</div></div>
       <div class="tile"><div class="k">Bejegyzés</div><div class="v">${written}</div><div class="s">összesen</div></div>
-      <div class="tile"><div class="k">Ma</div><div class="v" style="font-size:23px">${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}.</div><div class="s">${(e.text||"").trim()?"már írtál ma ✨":"még üres oldal"}</div></div>
+      <div class="tile"><div class="k">Ma</div><div class="v" style="font-size:23px">${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}.</div><div class="s">${((e.text||"").trim()||jrHasInk(e))?"már írtál ma":"még üres oldal"}</div></div>
     </div>
     <div class="card" style="padding:22px">
-      <div class="sec-head"><h2>Mai oldal</h2>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${MOODS.map(mo=>`<button class="mood ${e.mood===mo[0]?"on":""}" data-act="jr-mood" data-m="${mo[0]}" title="${mo[1]}">${mo[0]}</button>`).join("")}
+      <div class="sec-head" style="align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div class="tabs" style="margin:0">
+          <button class="tab ${!kez?"active":""}" data-act="jr-mode" data-m="text">Gépelés</button>
+          <button class="tab ${kez?"active":""}" data-act="jr-mode" data-m="kez">Kézírás</button>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+          ${MOODS.map(m=>`<button class="mood ${e.mood===m[0]?"on":""}" data-act="jr-mood" data-m="${m[0]}" style="--mc:${m[2]}"><i></i>${m[1]}</button>`).join("")}
         </div>
       </div>
-      <div class="jr-prompt">${esc(prompt)}
-        <button class="btn btn-soft sm" data-act="jr-prompt">Másik kérdés</button></div>
-      <textarea class="jr-text" data-bind="journal" data-date="${today}" placeholder="Írj szabadon… senki más nem látja.">${esc(e.text||"")}</textarea>
+      ${showQ?`<div class="jr-prompt">${esc(JR_PROMPTS[UI.prompt%JR_PROMPTS.length])}
+          <button class="btn btn-soft sm" data-act="jr-prompt">Másik</button>
+          <button class="btn btn-ghost sm" data-act="jr-prompt-off">Elrejt</button></div>`
+        :`<div style="margin:0 0 14px"><button class="btn btn-soft sm" data-act="jr-prompt-on">${ic("spark","")} Kérdést kérek</button></div>`}
+      ${body}
     </div>
     <div class="sec-head" style="margin:26px 0 12px"><h2>Korábbi oldalak</h2>
       <span style="font-size:12.5px;color:var(--muted)">${past.length} bejegyzés</span></div>
-    ${past.length?past.map(j=>{const pd=parse(j.date);return `<div class="card jr-past">
+    ${past.length?past.map(j=>{const pd=parse(j.date),mo=moodOf(j.mood);return `<div class="card jr-past">
         <div class="jr-past-head"><b>${pd.getFullYear()}. ${MONTHS_SHORT[pd.getMonth()]} ${pd.getDate()}.</b>
-          <span style="font-size:16px">${j.mood||""}</span>
+          ${mo?`<span class="mood-dot" style="--mc:${mo[2]}"><i></i>${mo[1]}</span>`:""}
+          ${jrHasInk(j)?`<span class="qc-tag">kézírás · ${j.notes.pages.filter(pg=>pg.length).length} oldal</span>`:""}
           <button class="mini-x" data-act="jr-del" data-jid="${j.id}" style="margin-left:auto">${ic("trash","")}</button></div>
-        <div class="jr-past-body">${esc(j.text||"")}</div></div>`;}).join("")
-      :`<div class="card empty" style="padding:34px"><p>Még nincs korábbi bejegyzés — a mai az első. 🌸</p></div>`}
+        ${(j.text||"").trim()?`<div class="jr-past-body">${esc(j.text)}</div>`:""}</div>`;}).join("")
+      :`<div class="card empty" style="padding:34px"><p>Még nincs korábbi bejegyzés — a mai az első.</p></div>`}
   </div>`;
 }
 
@@ -1031,7 +1062,11 @@ function initCanvas(){
   };
   cvs.onpointerup=end;cvs.onpointercancel=end;cvs.onpointerleave=end;
 }
-const page=()=>{const s=curSubject();return s.notes.pages[s.notes.cur];};
+function noteHost(){
+  if(UI.view==="journal")return journalEntry(todayStr(),true).notes;
+  const s=curSubject();return s?s.notes:null;
+}
+const page=()=>{const h=noteHost();return h?h.pages[h.cur]:[];};
 function strokeStyle(st){
   if(st.tool==="hl"){ctx.globalAlpha=0.28;ctx.globalCompositeOperation="multiply";return st.size*6;}
   ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";return st.size;
@@ -1101,7 +1136,10 @@ document.addEventListener("click",e=>{
     case"qn-del":STATE.quicknotes=STATE.quicknotes.filter(n=>n.id!==t.dataset.nid);go();break;
 
     case"jr-mood":{const j=journalEntry(todayStr(),true);j.mood=j.mood===t.dataset.m?"":t.dataset.m;go();break;}
+    case"jr-mode":UI.jrMode=t.dataset.m;penSeen=false;render();break;
     case"jr-prompt":UI.prompt=(UI.prompt+1)%JR_PROMPTS.length;render();break;
+    case"jr-prompt-on":UI.jrPrompt=true;UI.prompt=Math.floor(Math.random()*JR_PROMPTS.length);render();break;
+    case"jr-prompt-off":UI.jrPrompt=false;render();break;
     case"jr-del":if(confirm("Törlöd ezt a naplóbejegyzést?")){STATE.journal=STATE.journal.filter(j=>j.id!==t.dataset.jid);go();}break;
 
     case"cal-prev":UI.cal.m--;if(UI.cal.m<0){UI.cal.m=11;UI.cal.y--;}render();break;
@@ -1116,10 +1154,10 @@ document.addEventListener("click",e=>{
     case"pen-color":TOOL.color=t.dataset.c;if(TOOL.mode==="eraser")TOOL.mode="pen";refreshBar();break;
     case"pen-size":TOOL.size=Number(t.dataset.s);refreshBar();break;
     case"note-undo":{const pg=page();if(pg.length){pg.pop();redraw();save();}break;}
-    case"note-clear":if(page().length&&confirm("Törlöd ennek az oldalnak a tartalmát?")){const s=curSubject();s.notes.pages[s.notes.cur]=[];redraw();save();}break;
-    case"note-addpage":{const s=curSubject();s.notes.pages.push([]);s.notes.cur=s.notes.pages.length-1;save();render();break;}
-    case"note-prev":{const s=curSubject();if(s.notes.cur>0){s.notes.cur--;save();render();}break;}
-    case"note-next":{const s=curSubject();if(s.notes.cur<s.notes.pages.length-1){s.notes.cur++;save();render();}break;}
+    case"note-clear":if(page().length&&confirm("Törlöd ennek az oldalnak a tartalmát?")){const h=noteHost();h.pages[h.cur]=[];redraw();save();}break;
+    case"note-addpage":{const h=noteHost();h.pages.push([]);h.cur=h.pages.length-1;save();render();break;}
+    case"note-prev":{const h=noteHost();if(h.cur>0){h.cur--;save();render();}break;}
+    case"note-next":{const h=noteHost();if(h.cur<h.pages.length-1){h.cur++;save();render();}break;}
   }
 });
 document.addEventListener("keydown",e=>{
@@ -1175,7 +1213,7 @@ function banner(){
 load();
 if(memoryOnly)setTimeout(banner,600);
 render();
-window.addEventListener("resize",()=>{if(UI.view==="subject")initCanvas();});
+window.addEventListener("resize",()=>{if(UI.view==="subject"||(UI.view==="journal"&&UI.jrMode==="kez"))initCanvas();});
 </script>
 </body>
 </html>

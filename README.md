@@ -9,8 +9,9 @@ Bíborka személyes tanulószobája — egyetlen, függőség nélküli HTML fá
 2. **Iskolák** — több képzés párhuzamosan, saját színnel; tárgyanként tanár,
    elérhetőség, jegyek és átlag, ZH-k / beadandók, saját naptár és kézírásos jegyzetfüzet.
 3. **Munka → Ügyfelek** — kapcsolat, teendők határidővel, szabad szöveges jegyzet.
-4. **Journaling** — napi oldal hangulattal és váltogatható kérdésekkel,
-   sorozatszámlálóval és a korábbi oldalak listájával.
+4. **Journaling** — napi oldal gépelve **vagy kézzel írva** (iPad, Apple Pencil),
+   halk hangulatjelöléssel, sorozatszámlálóval és a korábbi oldalak listájával.
+   Kérdés csak akkor jelenik meg, ha kéred.
 
 ## Gyorsjegyzet
 
