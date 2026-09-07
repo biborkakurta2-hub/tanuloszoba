@@ -142,6 +142,7 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 .t-beadando{background:#EEEAFB;color:#7659B8}
 .t-vizsga{background:#FFF0E3;color:#C1803B}
 .t-ora{background:#E9F5EE;color:#4E9068}
+.t-feladat{background:#FBF1E4;color:#B5854A}
 
 /* tabs */
 .tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:14px;margin:22px 0 20px;width:max-content;max-width:100%}
@@ -215,19 +216,27 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
   box-shadow:inset 0 0 0 1px var(--line);
 }
 .paper canvas{display:block;width:100%;height:auto;touch-action:none;aspect-ratio:1000/1400}
+.paper-wrap{position:relative;overflow:hidden;border-radius:10px;touch-action:none;-webkit-user-select:none;user-select:none}
+.paper-wrap .paper{transform-origin:0 0;will-change:transform}
+.zoomctl{display:flex;align-items:center;gap:4px;margin-left:8px}
+.zoomctl .pg-btn{width:28px;height:28px}
+.zoomctl b{font-size:11.5px;color:var(--muted);min-width:40px;text-align:center;font-weight:700}
+.pen-hint{font-size:12px;color:var(--muted);margin:10px 2px 0;display:flex;align-items:center;gap:7px}
+.pen-hint b{color:var(--accent-deep)}
 .note-foot{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px;color:var(--muted);font-size:12.5px}
 .pg-btn{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;background:var(--surface-2);color:var(--muted)}
 .pg-btn:hover{background:var(--accent-soft);color:var(--accent-deep)}
 
 /* quick capture (gyorsjegyzet) */
-.qc{padding:18px 20px;margin-bottom:22px;border:1px solid var(--line-2);
+.qc{padding:24px 26px;margin-bottom:24px;border:1px solid var(--line-2);
   background:linear-gradient(135deg,#fff 0%,#FEF3F8 100%)}
-.qc-head{display:flex;align-items:center;gap:9px;color:var(--accent-deep);font-weight:700;font-size:14px;margin-bottom:12px;flex-wrap:wrap}
-.qc-head span{color:var(--muted);font-weight:500;font-size:12.5px}
-.qc-row{display:flex;gap:10px;flex-wrap:wrap}
-.qc-input{flex:1;min-width:220px;border:1px solid var(--line-2);background:#fff;border-radius:12px;padding:12px 14px;font-size:14.5px;transition:border-color .12s,box-shadow .12s}
+.qc-head{display:flex;align-items:center;gap:9px;color:var(--accent-deep);font-weight:700;font-size:16px;margin-bottom:14px;flex-wrap:wrap}
+.qc-head span{color:var(--muted);font-weight:500;font-size:13px}
+.qc-row{display:flex;gap:12px;flex-wrap:wrap}
+.qc-input{flex:1;min-width:240px;border:1px solid var(--line-2);background:#fff;border-radius:14px;padding:16px 18px;font-size:16.5px;transition:border-color .12s,box-shadow .12s}
 .qc-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-.qc-out{margin-top:12px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:24px}
+.qc-row .btn-primary{padding:14px 22px;font-size:15px;border-radius:14px}
+.qc-out{margin-top:14px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-height:24px}
 .qc-out b{color:var(--ink);font-size:13.5px}
 .qc-where{color:var(--muted)}
 .qc-chip{font-size:12px;color:var(--muted);background:var(--surface-2);border:1px dashed var(--line-2);padding:5px 10px;border-radius:20px}
@@ -346,7 +355,7 @@ const uid = ()=>Math.random().toString(36).slice(2,9);
 const MONTHS=["január","február","március","április","május","június","július","augusztus","szeptember","október","november","december"];
 const MONTHS_SHORT=["jan","feb","már","ápr","máj","jún","júl","aug","szep","okt","nov","dec"];
 const DOW=["H","K","Sze","Cs","P","Szo","V"];
-const TYPES={zh:"ZH",beadando:"Beadandó",vizsga:"Vizsga",ora:"Óra"};
+const TYPES={zh:"ZH",beadando:"Beadandó",vizsga:"Vizsga",ora:"Óra",feladat:"Feladat"};
 const pad=n=>String(n).padStart(2,"0");
 const fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const parse=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
@@ -440,6 +449,10 @@ function allExams(filterArea){
     a.subjects.forEach(s=>s.exams.forEach(e=>out.push({...e,areaId:a.id,areaName:a.name,subjId:s.id,subjName:s.name,color:s.color||a.color})));
     (a.events||[]).forEach(e=>out.push({...e,areaId:a.id,areaName:a.name,subjName:a.name,color:a.color}));
   });
+  if(!filterArea)STATE.clients.forEach(c=>c.tasks.forEach(t=>{
+    if(t.due)out.push({id:t.id,title:t.title,date:t.due,type:"feladat",done:!!t.done,
+      kind:"task",clientId:c.id,areaName:"Munka",subjName:c.name,color:"#C79A6B"});
+  }));
   return out;
 }
 
@@ -540,7 +553,7 @@ function weekView(areaId){
     return `<div class="wk-col ${ds===tstr?"today":""}" data-act="cal-day" data-d="${ds}">
       <div class="wk-head"><span class="wk-dow">${DOW[i]}</span><span class="wk-num">${d.getDate()}</span></div>
       ${list.length?list.map(e=>`<div class="wk-ev ${e.done?"done":""}" style="border-left:3px solid ${e.color}"
-          ${e.subjId?`data-act="nav-subject" data-id="${e.areaId}" data-sid="${e.subjId}"`:`data-act="nav-area" data-id="${e.areaId}"`}>
+          data-act="edit-ev" data-eid="${e.id}">
           <b>${esc(e.title)}</b><span>${TYPES[e.type]||""} · ${esc(e.subjName)}</span></div>`).join("")
         :`<div class="wk-empty">—</div>`}
     </div>`;
@@ -559,8 +572,8 @@ function todayGreeting(){const h=new Date().getHours();return h<10?"Szép reggel
 
 function deadlineRow(e){
   const d=parse(e.date),c=countLabel(e.date);
-  const nav = e.subjId ? `data-act="nav-subject" data-id="${e.areaId}" data-sid="${e.subjId}"` : `data-act="nav-area" data-id="${e.areaId}"`;
-  return `<div class="dl-row" ${nav}>
+  const nav = `data-act="edit-ev" data-eid="${e.id}"`;
+  return `<div class="dl-row" ${nav} style="cursor:pointer">
     <div class="dl-date"><div class="d">${d.getDate()}</div><div class="m">${MONTHS_SHORT[d.getMonth()]}</div></div>
     <div class="dl-body"><div class="t">${esc(e.title)}</div><div class="sub"><span class="type-badge t-${e.type}">${TYPES[e.type]||""}</span> &nbsp;${esc(e.subjName)} · ${esc(e.areaName)}</div></div>
     <div class="count ${c.cls}">${c.txt}</div>
@@ -647,7 +660,7 @@ function viewSubject(){
         <h4>ZH-k & beadandók <button class="btn btn-soft sm" data-act="add-exam-subj">${ic("plus","")} Új</button></h4>
         ${exams.length? exams.map(e=>{const c=countLabel(e.date);const d=parse(e.date);return `<div class="list-row ${e.done?"done":""}">
             <button class="chk ${e.done?"on":""}" data-act="toggle-exam" data-eid="${e.id}">${ic("check","")}</button>
-            <div class="grow"><div class="tt">${esc(e.title)} <span class="type-badge t-${e.type}">${TYPES[e.type]}</span></div>
+            <div class="grow" data-act="edit-ev" data-eid="${e.id}" style="cursor:pointer"><div class="tt">${esc(e.title)} <span class="type-badge t-${e.type}">${TYPES[e.type]}</span></div>
               <div class="dd">${d.getFullYear()}. ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}. ${e.done?"":"· <b style='color:var(--accent-deep)'>"+c.txt+"</b>"}</div></div>
             <button class="mini-x" data-act="del-exam" data-eid="${e.id}">${ic("trash","")}</button></div>`;}).join("")
           :`<div style="color:var(--faint);font-size:13px;padding:6px 0">Még nincs ZH vagy beadandó. Add hozzá, és megjelenik a naptárban is.</div>`}
@@ -656,15 +669,16 @@ function viewSubject(){
 
     <div class="notes">
       <div class="sec-head"><h2 style="display:flex;align-items:center;gap:9px">${ic("pen","")} Jegyzetfüzet</h2>
-        <span style="font-size:12.5px;color:var(--muted)">Apple Pencillel is írható ✍️</span></div>
+        <span style="font-size:12.5px;color:var(--muted)">Írni csak Apple Pencillel · ujjal nagyítás</span></div>
       ${noteBar()}
       <div class="note-stage">
-        <div class="paper"><canvas id="pad"></canvas></div>
+        <div class="paper-wrap" id="paperWrap"><div class="paper" id="paperEl"><canvas id="pad"></canvas></div></div>
         <div class="note-foot">
           <button class="pg-btn" data-act="note-prev">${ic("chevL","")}</button>
           <span>Oldal <b id="pgNum">${s.notes.cur+1}</b> / <span id="pgTot">${s.notes.pages.length}</span></span>
           <button class="pg-btn" data-act="note-next">${ic("chevR","")}</button>
           <button class="btn btn-soft sm" data-act="note-addpage" style="margin-left:8px">${ic("plus","")} Új oldal</button>
+          ${zoomCtl()}
         </div>
       </div>
     </div>
@@ -673,6 +687,13 @@ function viewSubject(){
 
 let TOOL={mode:"pen",color:"#3B2C34",size:2};
 const PEN_COLORS=["#3B2C34","#C65B84","#9E7FC4","#5B9BC6","#7FA98C","#C79A6B","#D64545"];
+function zoomCtl(){
+  return `<span class="zoomctl">
+    <button class="pg-btn" data-act="zoom-out" title="Kicsinyítés">−</button>
+    <b id="zoomLbl">100%</b>
+    <button class="pg-btn" data-act="zoom-in" title="Nagyítás">+</button>
+  </span>`;
+}
 function noteBar(){
   return `<div class="note-bar">
     <button class="tool ${TOOL.mode==="pen"?"active":""}" data-act="tool" data-tool="pen" title="Toll">${ic("pen","")}</button>
@@ -871,15 +892,18 @@ function viewJournal(){
   const body = kez
     ? `${noteBar()}
       <div class="note-stage" style="padding:0;border:0;box-shadow:none;margin-top:12px">
-        <div class="paper"><canvas id="pad"></canvas></div>
+        <div class="paper-wrap" id="paperWrap"><div class="paper" id="paperEl"><canvas id="pad"></canvas></div></div>
         <div class="note-foot">
           <button class="pg-btn" data-act="note-prev">${ic("chevL","")}</button>
           <span>Oldal <b>${(e.notes.cur||0)+1}</b> / <span>${e.notes.pages.length}</span></span>
           <button class="pg-btn" data-act="note-next">${ic("chevR","")}</button>
           <button class="btn btn-soft sm" data-act="note-addpage" style="margin-left:8px">${ic("plus","")} Új oldal</button>
+          ${zoomCtl()}
         </div>
+        <div class="pen-hint">${ic("pen","")} Írni csak <b>Apple Pencillel</b> lehet — az ujjaddal nagyíthatsz (két ujj) és görgethetsz.</div>
       </div>`
-    : `<textarea class="jr-text" data-bind="journal" data-date="${today}" placeholder="Írj szabadon… senki más nem látja.">${esc(e.text||"")}</textarea>`;
+    : `<textarea class="jr-text" data-bind="journal" data-date="${today}" placeholder="Írj szabadon… senki más nem látja.">${esc(e.text||"")}</textarea>
+      <div class="pen-hint">${ic("spark","")} iPaden Apple Pencillel <b>közvetlenül ebbe a mezőbe is írhatsz</b> — az iPadOS Scribble szöveggé alakítja.</div>`;
   return `<div class="wrap">
     <div class="page-head">
       <div class="eyebrow">${ic("pen","")} Napló</div>
@@ -956,7 +980,7 @@ function viewClient(){
         <h4 style="margin-top:18px">Teendők <button class="btn btn-soft sm" data-act="add-task">${ic("plus","")} Teendő</button></h4>
         ${tasks.length?tasks.map(t=>`<div class="list-row ${t.done?"done":""}">
             <button class="chk ${t.done?"on":""}" data-act="toggle-task" data-tid="${t.id}">${ic("check","")}</button>
-            <div class="grow"><div class="tt">${esc(t.title)}</div>${t.due?`<div class="dd">Határidő: ${esc(t.due)} · <b style="color:var(--accent-deep)">${countLabel(t.due).txt}</b></div>`:""}</div>
+            <div class="grow" data-act="edit-ev" data-eid="${t.id}" style="cursor:pointer"><div class="tt">${esc(t.title)}</div>${t.due?`<div class="dd">Határidő: ${esc(t.due)} · <b style="color:var(--accent-deep)">${countLabel(t.due).txt}</b></div>`:""}</div>
             <button class="mini-x" data-act="del-task" data-tid="${t.id}">${ic("trash","")}</button></div>`).join("")
           :`<div style="color:var(--faint);font-size:13px;padding:6px 0">Nincs teendő. 🎉</div>`}
       </div>
@@ -980,7 +1004,7 @@ function calendar(areaId){
   const tstr=todayStr();
   for(let d=1;d<=days;d++){
     const ds=`${y}-${pad(m+1)}-${pad(d)}`;const list=byDay[d]||[];
-    let dots=list.slice(0,2).map(e=>`<span class="cal-ev t-${e.type}" title="${esc(e.title)}">${esc(e.title)}</span>`).join("");
+    let dots=list.slice(0,2).map(e=>`<span class="cal-ev t-${e.type} ${e.done?"done":""}" data-act="edit-ev" data-eid="${e.id}" title="${esc(e.title)}">${esc(e.title)}</span>`).join("");
     if(list.length>2)dots+=`<span class="cal-more">+${list.length-2}</span>`;
     if(list.length&&window.innerWidth<=900)dots=`<div class="cal-dots">${list.slice(0,4).map(e=>`<span style="width:6px;height:6px;border-radius:50%;background:${e.color}"></span>`).join("")}</div>`;
     cells+=`<div class="cal-cell ${ds===tstr?"today":""}" data-act="cal-day" data-d="${ds}"><div class="num">${d}</div>${dots}</div>`;
@@ -1001,7 +1025,8 @@ function emptyState(icon,title,text,btn,act,id){
 }
 
 /* ============ modal ============ */
-function modal(title,fields,onSubmit){
+function modal(title,fields,onSubmit,opts){
+  opts=opts||{};
   const bg=$("#modalBg");
   bg.innerHTML=`<div class="modal"><h3>${esc(title)}</h3><div id="mfields">
     ${fields.map(f=>{
@@ -1011,7 +1036,10 @@ function modal(title,fields,onSubmit){
       return `<div class="mf"><label>${esc(f.label)}</label><input data-k="${f.key}" type="${f.type||"text"}" placeholder="${esc(f.ph||"")}" value="${esc(f.value||"")}"></div>`;
     }).join("")}
     </div>
-    <div class="modal-actions"><button class="btn btn-ghost" data-mclose>Mégse</button><button class="btn btn-primary" data-msubmit>Mentés</button></div></div>`;
+    <div class="modal-actions">
+      ${opts.danger?`<button class="btn btn-ghost" data-mdanger style="color:#D0567A;margin-right:auto">${esc(opts.danger.label)}</button>`:""}
+      ${opts.jump?`<button class="btn btn-ghost" data-mjump>${esc(opts.jump.label)}</button>`:""}
+      <button class="btn btn-ghost" data-mclose>Mégse</button><button class="btn btn-primary" data-msubmit>Mentés</button></div></div>`;
   let pickedColor=AREA_COLORS[0];
   bg.querySelectorAll(".swatch-pick").forEach(b=>b.onclick=()=>{bg.querySelectorAll(".swatch-pick").forEach(x=>x.classList.remove("active"));b.classList.add("active");pickedColor=b.dataset.color;});
   bg.classList.add("on");
@@ -1026,41 +1054,142 @@ function modal(title,fields,onSubmit){
     onSubmit(data);close();
   };
   bg.querySelector("[data-msubmit]").onclick=submit;
+  if(opts.danger)bg.querySelector("[data-mdanger]").onclick=()=>{close();opts.danger.fn();};
+  if(opts.jump)bg.querySelector("[data-mjump]").onclick=()=>{close();opts.jump.fn();};
   bg.querySelectorAll("input").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter")submit();}));
+}
+function findEvent(id){
+  for(const a of STATE.areas){
+    for(const su of a.subjects){const e=su.exams.find(x=>x.id===id);
+      if(e)return{ev:e,kind:"subject",area:a,subject:su,list:su.exams};}
+    const e=(a.events||[]).find(x=>x.id===id);
+    if(e)return{ev:e,kind:"area",area:a,list:a.events};
+  }
+  for(const c of STATE.clients){const t=c.tasks.find(x=>x.id===id);
+    if(t)return{ev:t,kind:"task",client:c,list:c.tasks};}
+  return null;
+}
+function openEditModal(id){
+  const f=findEvent(id); if(!f)return;
+  const isTask=f.kind==="task";
+  const fields=[{key:"title",label:"Megnevezés",value:f.ev.title,required:true}];
+  if(!isTask)fields.push(examTypeField(f.ev.type||"zh"));
+  fields.push({key:"date",label:"Dátum",type:"date",value:(isTask?f.ev.due:f.ev.date)||todayStr(),required:true});
+  fields.push({key:"done",label:"Állapot",type:"select",value:f.ev.done?"1":"0",
+    options:[{v:"0",t:"Nyitott"},{v:"1",t:"Kész ✓"}]});
+  const where=isTask?`${f.client.name} · ügyfél`
+    :f.kind==="subject"?`${f.subject.name} · ${f.area.name}`:`${f.area.name} · iskola-szintű`;
+  modal("Teendő szerkesztése",fields,d=>{
+    f.ev.title=d.title; f.ev.done=d.done==="1";
+    if(isTask)f.ev.due=d.date; else{f.ev.date=d.date;f.ev.type=d.type;}
+    save();render();
+  },{
+    danger:{label:"Törlés",fn:()=>{const i=f.list.indexOf(f.ev);if(i>=0)f.list.splice(i,1);save();render();}},
+    jump:{label:"Megnyitás",fn:()=>{
+      if(isTask)UI={...UI,view:"client",clientId:f.client.id};
+      else if(f.kind==="subject")UI={...UI,view:"subject",areaId:f.area.id,subjectId:f.subject.id};
+      else UI={...UI,view:"area",areaId:f.area.id,tab:"naptar"};
+      render();}},
+    note:where
+  });
+  const h=$("#modalBg .modal h3"); if(h)h.insertAdjacentHTML("afterend",
+    `<div style="font-size:12.5px;color:var(--muted);margin:-10px 0 14px">${esc(where)}</div>`);
 }
 const examTypeField=(v="zh")=>({key:"type",label:"Típus",type:"select",value:v,options:[{v:"zh",t:"ZH / dolgozat"},{v:"beadando",t:"Beadandó"},{v:"vizsga",t:"Vizsga"},{v:"ora",t:"Óra / esemény"}]});
 
 /* ============ canvas engine ============ */
-let ctx,cvs,DPR=1,penSeen=false,drawing=false,cur=null,erasing=false;
+/* Rajzolni CSAK tollal (Apple Pencil) vagy egérrel lehet.
+   Az ujj mindig navigál: két ujjal nagyítás, egy ujjal görgetés / eltolás. */
+let ctx,cvs,DPR=1,drawing=false,cur=null,erasing=false;
 const LW=1000,LH=1400;
+let VIEW={k:1,tx:0,ty:0};
+const touches=new Map();let pinch=null;
 function curSubject(){const a=area(UI.areaId);return subj(a,UI.subjectId);}
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+function applyView(){
+  const wrap=$("#paperWrap"),paper=$("#paperEl");if(!wrap||!paper)return;
+  const W=wrap.clientWidth,H=paper.offsetHeight;
+  VIEW.k=clamp(VIEW.k,1,5);
+  VIEW.tx=clamp(VIEW.tx,W-W*VIEW.k,0);
+  VIEW.ty=clamp(VIEW.ty,H-H*VIEW.k,0);
+  paper.style.transform=`translate(${VIEW.tx}px,${VIEW.ty}px) scale(${VIEW.k})`;
+  const z=$("#zoomLbl");if(z)z.textContent=Math.round(VIEW.k*100)+"%";
+}
+function zoomBy(f){
+  const wrap=$("#paperWrap");if(!wrap)return;
+  const W=wrap.clientWidth,H=wrap.clientHeight;
+  const nk=clamp(VIEW.k*f,1,5);
+  const cx=(W/2-VIEW.tx)/VIEW.k, cy=(H/2-VIEW.ty)/VIEW.k;
+  VIEW.k=nk;VIEW.tx=W/2-cx*nk;VIEW.ty=H/2-cy*nk;applyView();
+}
 function initCanvas(){
   cvs=$("#pad");if(!cvs)return;
   DPR=Math.min(window.devicePixelRatio||1,2);
-  const setSize=()=>{cvs.width=LW*DPR;cvs.height=LH*DPR;ctx=cvs.getContext("2d");ctx.setTransform(DPR,0,0,DPR,0,0);ctx.lineCap="round";ctx.lineJoin="round";redraw();};
-  setSize();
-  const toLocal=e=>{const r=cvs.getBoundingClientRect();return{x:(e.clientX-r.left)*(LW/r.width),y:(e.clientY-r.top)*(LH/r.height),p:e.pressure&&e.pressure>0?e.pressure:0.5};};
+  cvs.width=LW*DPR;cvs.height=LH*DPR;
+  ctx=cvs.getContext("2d");ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.lineCap="round";ctx.lineJoin="round";redraw();
+  VIEW={k:1,tx:0,ty:0};touches.clear();pinch=null;applyView();
+
+  const toLocal=e=>{const r=cvs.getBoundingClientRect();
+    return{x:(e.clientX-r.left)*(LW/r.width),y:(e.clientY-r.top)*(LH/r.height),
+      p:e.pressure&&e.pressure>0?e.pressure:0.5};};
+
   cvs.onpointerdown=e=>{
-    if(e.pointerType==="pen")penSeen=true;
-    if(e.pointerType==="touch"&&penSeen)return;
+    if(e.pointerType==="touch")return;          // ujjal soha nem írunk
     e.preventDefault();cvs.setPointerCapture(e.pointerId);
     const pt=toLocal(e);
     if(TOOL.mode==="eraser"){erasing=true;eraseAt(pt);return;}
     drawing=true;cur={tool:TOOL.mode,color:TOOL.color,size:TOOL.size,points:[pt]};
   };
   cvs.onpointermove=e=>{
-    if(e.pointerType==="touch"&&penSeen)return;
+    if(e.pointerType==="touch")return;
     if(erasing){eraseAt(toLocal(e));return;}
     if(!drawing)return;e.preventDefault();
     const pt=toLocal(e),prev=cur.points[cur.points.length-1];cur.points.push(pt);drawSeg(cur,prev,pt);
   };
-  const end=()=>{
+  const end=e=>{
+    if(e&&e.pointerType==="touch")return;
     if(erasing){erasing=false;save();return;}
     if(!drawing)return;drawing=false;
     if(cur.points.length){page().push(cur);save();}
     cur=null;
   };
   cvs.onpointerup=end;cvs.onpointercancel=end;cvs.onpointerleave=end;
+
+  /* ---- ujj-gesztusok a lapon ---- */
+  const wrap=$("#paperWrap");if(!wrap)return;
+  const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+  wrap.onpointerdown=e=>{
+    if(e.pointerType!=="touch")return;
+    touches.set(e.pointerId,{x:e.clientX,y:e.clientY,px:e.clientX,py:e.clientY});
+    if(touches.size===2){
+      const t=[...touches.values()];
+      pinch={d:dist(t[0],t[1])||1,mx:(t[0].x+t[1].x)/2,my:(t[0].y+t[1].y)/2,k:VIEW.k,tx:VIEW.tx,ty:VIEW.ty};
+    }
+  };
+  wrap.onpointermove=e=>{
+    if(e.pointerType!=="touch")return;
+    const t=touches.get(e.pointerId);if(!t)return;
+    t.px=t.x;t.py=t.y;t.x=e.clientX;t.y=e.clientY;
+    const r=wrap.getBoundingClientRect();
+    if(touches.size>=2&&pinch){
+      const a=[...touches.values()],nd=dist(a[0],a[1])||1;
+      const nk=clamp(pinch.k*nd/pinch.d,1,5);
+      const ax=(pinch.mx-r.left-pinch.tx)/pinch.k, ay=(pinch.my-r.top-pinch.ty)/pinch.k;
+      const nmx=(a[0].x+a[1].x)/2-r.left, nmy=(a[0].y+a[1].y)/2-r.top;
+      VIEW.k=nk;VIEW.tx=nmx-ax*nk;VIEW.ty=nmy-ay*nk;applyView();
+    }else if(touches.size===1){
+      const dx=t.x-t.px, dy=t.y-t.py;
+      if(VIEW.k>1.01){VIEW.tx+=dx;VIEW.ty+=dy;applyView();}
+      else{const m=$(".main");if(m)m.scrollTop-=dy;}   // nem nagyított lapon az ujj görget
+    }
+  };
+  const tend=e=>{
+    if(e.pointerType!=="touch")return;
+    touches.delete(e.pointerId);
+    if(touches.size<2)pinch=null;
+  };
+  wrap.onpointerup=tend;wrap.onpointercancel=tend;wrap.onpointerleave=tend;
 }
 function noteHost(){
   if(UI.view==="journal")return journalEntry(todayStr(),true).notes;
@@ -1100,7 +1229,7 @@ document.addEventListener("click",e=>{
     case"nav-diary":UI={...UI,view:"diary"};closeSide();render();break;
     case"nav-journal":UI={...UI,view:"journal"};closeSide();render();break;
     case"nav-area":UI={...UI,view:"area",areaId:id,subjectId:null,tab:"targyak"};UI.cal=null;closeSide();render();break;
-    case"nav-subject":UI={...UI,view:"subject",areaId:id,subjectId:sid};penSeen=false;closeSide();render();break;
+    case"nav-subject":UI={...UI,view:"subject",areaId:id,subjectId:sid};closeSide();render();break;
     case"nav-clients":UI={...UI,view:"clients"};closeSide();render();break;
     case"nav-client":UI={...UI,view:"client",clientId:id};closeSide();render();break;
     case"area-tab":UI.tab=t.dataset.tab;render();break;
@@ -1131,12 +1260,13 @@ document.addEventListener("click",e=>{
       d.setDate(d.getDate()+(act==="wk-next"?7:-7));UI.week=fmt(d);render();break;}
     case"wk-today":UI.week=null;render();break;
 
+    case"edit-ev":openEditModal(t.dataset.eid);break;
     case"qc-add":qcCommit();break;
     case"qc-fill":UI.qc=t.dataset.x;render();focusQc();break;
     case"qn-del":STATE.quicknotes=STATE.quicknotes.filter(n=>n.id!==t.dataset.nid);go();break;
 
     case"jr-mood":{const j=journalEntry(todayStr(),true);j.mood=j.mood===t.dataset.m?"":t.dataset.m;go();break;}
-    case"jr-mode":UI.jrMode=t.dataset.m;penSeen=false;render();break;
+    case"jr-mode":UI.jrMode=t.dataset.m;render();break;
     case"jr-prompt":UI.prompt=(UI.prompt+1)%JR_PROMPTS.length;render();break;
     case"jr-prompt-on":UI.jrPrompt=true;UI.prompt=Math.floor(Math.random()*JR_PROMPTS.length);render();break;
     case"jr-prompt-off":UI.jrPrompt=false;render();break;
@@ -1153,6 +1283,8 @@ document.addEventListener("click",e=>{
     case"tool":TOOL.mode=t.dataset.tool;refreshBar();break;
     case"pen-color":TOOL.color=t.dataset.c;if(TOOL.mode==="eraser")TOOL.mode="pen";refreshBar();break;
     case"pen-size":TOOL.size=Number(t.dataset.s);refreshBar();break;
+    case"zoom-in":zoomBy(1.35);break;
+    case"zoom-out":zoomBy(1/1.35);break;
     case"note-undo":{const pg=page();if(pg.length){pg.pop();redraw();save();}break;}
     case"note-clear":if(page().length&&confirm("Törlöd ennek az oldalnak a tartalmát?")){const h=noteHost();h.pages[h.cur]=[];redraw();save();}break;
     case"note-addpage":{const h=noteHost();h.pages.push([]);h.cur=h.pages.length-1;save();render();break;}

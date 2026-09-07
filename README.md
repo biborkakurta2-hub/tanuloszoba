@@ -4,8 +4,9 @@ Bíborka személyes tanulószobája — egyetlen, függőség nélküli HTML fá
 
 ## Négy rész
 
-1. **Határidő napló** — az összes iskola és ügyfél teendője egy naptárban,
-   **havi** és **heti** nézetben, visszaszámlálással. Itt van a **gyorsjegyzet** is.
+1. **Határidő napló** — az összes iskola és **ügyfél-teendő** egy naptárban,
+   **havi** és **heti** nézetben, visszaszámlálással. Bármelyik bejegyzésre kattintva
+   szerkeszthető (név, típus, dátum, kész/nyitott) vagy törölhető. Itt van a **gyorsjegyzet** is.
 2. **Iskolák** — több képzés párhuzamosan, saját színnel; tárgyanként tanár,
    elérhetőség, jegyek és átlag, ZH-k / beadandók, saját naptár és kézírásos jegyzetfüzet.
 3. **Munka → Ügyfelek** — kapcsolat, teendők határidővel, szabad szöveges jegyzet.
@@ -31,10 +32,17 @@ relatívan (`ma`, `holnap`, `3 nap múlva`) és napnévvel (`pénteken`, `jövő
 típust (ZH / beadandó / vizsga / óra), a tárgyat és az ügyfelet is. A felismerés a böngészőben
 fut, beépített magyar szabályokkal — nincs mögötte szerver, se API-kulcs.
 
-## Jegyzetfüzet
+## Jegyzetfüzet és kézírás
 
-Kézírásos vászon tárgyanként (toll, szövegkiemelő, radír, több oldal), Apple Pencil
-nyomásérzékenységgel; ha ceruzát érzékel, a tenyérérintést figyelmen kívül hagyja.
+Kézírásos vászon tárgyanként és a naplóban is: toll, szövegkiemelő, radír, több oldal,
+Apple Pencil nyomásérzékenységgel.
+
+- **Írni csak tollal (Apple Pencil) vagy egérrel lehet** — az ujj soha nem hagy nyomot.
+- **Két ujjal nagyítás** a lapon (100–500%), egy ujjal eltolás nagyított lapon,
+  nem nagyított lapon pedig sima görgetés. Gombokkal is nagyítható.
+- Kézírás **szöveggé alakítása**: a naplóban a *Gépelés* fülön iPadOS-en az Apple Pencillel
+  közvetlenül a szövegmezőbe lehet írni, és a rendszer Scribble funkciója szöveggé alakítja.
+  Az alkalmazás saját kézírás-felismerőt nem tartalmaz (ahhoz szerveroldali modell kellene).
 
 Minden adat a böngésző `localStorage`-ában marad (kulcs: `biborka_hub_v1`) — szerver, fiók és feltöltés nincs.
 
