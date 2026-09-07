@@ -4,9 +4,10 @@ Bíborka személyes tanulószobája — egyetlen, függőség nélküli HTML fá
 
 ## Négy rész
 
-1. **Határidő napló** — az összes iskola és **ügyfél-teendő** egy naptárban,
-   **havi** és **heti** nézetben, visszaszámlálással. Bármelyik bejegyzésre kattintva
-   szerkeszthető (név, típus, dátum, kész/nyitott) vagy törölhető. Itt van a **gyorsjegyzet** is.
+1. **Határidő napló** — a saját teendők, az iskolák és az ügyfelek határidői egy naptárban,
+   **havi** és **heti** nézetben, visszaszámlálással. **Egy naptári napra kattintva kilistázza
+   az aznapi összes teendőt** — ott pipálható, szerkeszthető, törölhető, és új is vehető fel.
+   Itt van a **gyorsjegyzet** is.
 2. **Iskolák** — több képzés párhuzamosan, saját színnel; tárgyanként tanár,
    elérhetőség, jegyek és átlag, ZH-k / beadandók, saját naptár és kézírásos jegyzetfüzet.
 3. **Munka → Ügyfelek** — kapcsolat, teendők határidővel, szabad szöveges jegyzet.
@@ -18,19 +19,22 @@ Bíborka személyes tanulószobája — egyetlen, függőség nélküli HTML fá
 
 A határidő napló tetején egy mondatban le lehet írni a teendőt, és a helyére kerül:
 
+**A dátumot ismeri fel, mást nem talál ki magától.** A megnevezés az marad, amit beírtál,
+és típust vagy tárgyat csak akkor kap, ha te írtad oda.
+
 | amit beírsz | ahova kerül |
 |---|---|
+| `bevásárlás ma` | saját teendő, mai dátummal |
+| `fodrász jövő kedd` | saját teendő, jövő keddre |
 | `római jog zh okt 3.` | Római jog I. → ZH, október 3. |
-| `alkotmányjog beadandó holnap` | Alkotmányjog I. → Beadandó, holnap |
-| `büntetőeljárásjog vizsga jan 15.` | Büntetőeljárásjog → Vizsga, január 15. |
 | `Zita: számla péntek` | Zita ügyfél → teendő, péntekre |
-| `konzultáció 2026-10-20` | iskola-szintű esemény |
 | `vegyél tejet` | dátum nélkül → gyorsjegyzetek közé |
 
 Ért magyar dátumot hónapnévvel (`okt 3.`, `október 3-án`), számmal (`10.12`, `2026-10-20`),
-relatívan (`ma`, `holnap`, `3 nap múlva`) és napnévvel (`pénteken`, `jövő kedd`), felismeri a
-típust (ZH / beadandó / vizsga / óra), a tárgyat és az ügyfelet is. A felismerés a böngészőben
-fut, beépített magyar szabályokkal — nincs mögötte szerver, se API-kulcs.
+relatívan (`ma`, `holnap`, `3 nap múlva`) és napnévvel (`pénteken`, `jövő kedd`).
+Tárgyhoz vagy ügyfélhez csak akkor sorolja be, ha a nevét felismerhetően kiírtad —
+egyébként sima saját teendő marad. A felismerés a böngészőben fut, beépített magyar
+szabályokkal — nincs mögötte szerver, se API-kulcs.
 
 ## Jegyzetfüzet és kézírás
 

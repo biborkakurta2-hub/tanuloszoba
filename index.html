@@ -143,6 +143,7 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 .t-vizsga{background:#FFF0E3;color:#C1803B}
 .t-ora{background:#E9F5EE;color:#4E9068}
 .t-feladat{background:#FBF1E4;color:#B5854A}
+.t-teendo{background:#F3EDF0;color:#7A6470}
 
 /* tabs */
 .tabs{display:flex;gap:4px;background:var(--surface-2);padding:4px;border-radius:14px;margin:22px 0 20px;width:max-content;max-width:100%}
@@ -289,6 +290,7 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 .modal{background:var(--surface);border-radius:22px;box-shadow:var(--shadow-lg);width:min(440px,100%);padding:24px;transform:translateY(8px) scale(.98);transition:transform .2s}
 .modal-bg.on .modal{transform:none}
 .modal h3{font-size:21px;margin-bottom:16px}
+.day-list{max-height:52vh;overflow-y:auto;margin:0 -2px}
 .mf{margin-bottom:13px}
 .mf label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px}
 .mf input,.mf select,.mf textarea{width:100%;border:1px solid var(--line-2);background:var(--surface-2);border-radius:11px;padding:11px 13px;font-size:14px;transition:border-color .12s}
@@ -355,7 +357,8 @@ const uid = ()=>Math.random().toString(36).slice(2,9);
 const MONTHS=["január","február","március","április","május","június","július","augusztus","szeptember","október","november","december"];
 const MONTHS_SHORT=["jan","feb","már","ápr","máj","jún","júl","aug","szep","okt","nov","dec"];
 const DOW=["H","K","Sze","Cs","P","Szo","V"];
-const TYPES={zh:"ZH",beadando:"Beadandó",vizsga:"Vizsga",ora:"Óra",feladat:"Feladat"};
+const TYPES={teendo:"Teendő",zh:"ZH",beadando:"Beadandó",vizsga:"Vizsga",ora:"Óra",feladat:"Feladat"};
+const DOW_FULL=["hétfő","kedd","szerda","csütörtök","péntek","szombat","vasárnap"];
 const pad=n=>String(n).padStart(2,"0");
 const fmt=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const parse=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
@@ -409,7 +412,8 @@ function seed(){
       {id:uid(),name:"Euro Express",contact:"",notes:"",tasks:[]}
     ],
     journal:[],
-    quicknotes:[]
+    quicknotes:[],
+    tasks:[]
   };
 }
 function load(){
@@ -421,7 +425,7 @@ function load(){
   // ensure shape
   STATE.settings=STATE.settings||{name:"Bíborka",workspace:"Tanulószoba"};
   STATE.areas=STATE.areas||[]; STATE.clients=STATE.clients||[];
-  STATE.journal=STATE.journal||[]; STATE.quicknotes=STATE.quicknotes||[];
+  STATE.journal=STATE.journal||[]; STATE.quicknotes=STATE.quicknotes||[]; STATE.tasks=STATE.tasks||[];
   STATE.journal.forEach(j=>{j.notes=j.notes||{pages:[[]],cur:0};
     if(j.mood&&OLD_MOOD[j.mood])j.mood=OLD_MOOD[j.mood];});
   STATE.areas.forEach(a=>{a.events=a.events||[];a.subjects=a.subjects||[];
@@ -449,6 +453,8 @@ function allExams(filterArea){
     a.subjects.forEach(s=>s.exams.forEach(e=>out.push({...e,areaId:a.id,areaName:a.name,subjId:s.id,subjName:s.name,color:s.color||a.color})));
     (a.events||[]).forEach(e=>out.push({...e,areaId:a.id,areaName:a.name,subjName:a.name,color:a.color}));
   });
+  if(!filterArea)STATE.tasks.forEach(t=>out.push({...t,type:t.type||"teendo",kind:"own",
+    areaName:"Teendők",subjName:"Saját teendő",color:"#8E7A85"}));
   if(!filterArea)STATE.clients.forEach(c=>c.tasks.forEach(t=>{
     if(t.due)out.push({id:t.id,title:t.title,date:t.due,type:"feladat",done:!!t.done,
       kind:"task",clientId:c.id,areaName:"Munka",subjName:c.name,color:"#C79A6B"});
@@ -766,16 +772,19 @@ function findType(f,dr){
     if(m&&!(dr&&m.index<dr.e&&m.index+m[0].length>dr.s))return{type:t,s:m.index,e:m.index+m[0].length};}
   return null;
 }
-function bestMatch(toks,cands){
+function bestMatch(toks,cands,min){
   let best=null,bs=0;
   cands.forEach(c=>{
     const n=NOACC(c.name), parts=n.split(/[^a-z0-9]+/).filter(w=>w.length>2);
     let sc=0;
     toks.forEach(t=>{if(t.length>2&&n.indexOf(t)>=0)sc+=2;});
-    parts.forEach(w=>{if(toks.some(t=>t.length>3&&w.indexOf(t.slice(0,5))===0))sc+=1;});
+    parts.forEach(w=>{
+      if(toks.some(t=>t===w))sc+=3;                                   // kiírt névrész
+      else if(toks.some(t=>t.length>3&&w.indexOf(t.slice(0,5))===0))sc+=1;
+    });
     if(sc>bs){bs=sc;best=c;}
   });
-  return bs>=2?{item:best,score:bs}:null;
+  return bs>=(min||4)?{item:best,score:bs}:null;
 }
 function parseQuick(raw){
   const text=String(raw||"").trim(); if(!text)return null;
@@ -788,33 +797,32 @@ function parseQuick(raw){
   const toks=rest.map(w=>NOACC(w.w).replace(/[^a-z0-9]/g,"")).filter(Boolean);
   const subs=[];STATE.areas.forEach(a=>a.subjects.forEach(su=>subs.push({kind:"subject",areaId:a.id,subjId:su.id,name:su.name})));
   const cls=STATE.clients.map(c=>({kind:"client",clientId:c.id,name:c.name}));
-  const bs=bestMatch(toks,subs), bc=bestMatch(toks,cls);
+  const bs=bestMatch(toks,subs,4), bc=bestMatch(toks,cls,4);
   const tgt=(bs&&(!bc||bs.score>=bc.score))?bs:bc;
-  const nameToks=tgt?NOACC(tgt.item.name).split(/[^a-z0-9]+/).filter(Boolean):[];
-  let title=rest.filter(w=>{const t=NOACC(w.w).replace(/[^a-z0-9]/g,"");
-      return t&&!nameToks.some(n=>n===t||(t.length>2&&n.indexOf(t)===0));})
-    .map(w=>w.w).join(" ").replace(/^[\s:,;.\-–—]+/,"").replace(/[\s:,;.\-–—]+$/,"").trim();
+  // a megnevezés az, amit beírtál — csak a dátum-részt vesszük ki belőle
+  let title=words.filter(w=>!hit(w,dr)).map(w=>w.w).join(" ")
+    .replace(/^[\s:,;.\-–—]+/,"").replace(/[\s:,;.\-–—]+$/,"").trim();
   if(!dr)return{kind:"note",title:text};
-  const type=tr?tr.type:"ora";
-  if(!title&&tr){const tw=text.slice(tr.s,tr.e).trim();if(tw)title=tw.length<=3?tw.toUpperCase():tw.charAt(0).toUpperCase()+tw.slice(1);}
+  if(!title)title="Teendő";
+  const type=tr?tr.type:"teendo";           // csak akkor kap típust, ha te írtad oda
   if(tgt&&tgt.item.kind==="client")
-    return{kind:"client",clientId:tgt.item.clientId,date:dr.date,title:title||"Teendő"};
+    return{kind:"client",clientId:tgt.item.clientId,date:dr.date,title};
   if(tgt&&tgt.item.kind==="subject")
-    return{kind:"subject",areaId:tgt.item.areaId,subjId:tgt.item.subjId,date:dr.date,type,title:title||TYPES[type]};
-  if(!STATE.areas.length)return{kind:"note",title:text};
-  return{kind:"area",areaId:STATE.areas[0].id,date:dr.date,type,title:title||TYPES[type]};
+    return{kind:"subject",areaId:tgt.item.areaId,subjId:tgt.item.subjId,date:dr.date,type,title};
+  return{kind:"own",date:dr.date,type,title};
 }
 function qcOut(q){
   const p=q&&q.trim()?parseQuick(q):null;
-  if(!p)return ["római jog zh okt 3.","beadandó holnap","vizsga jan 15.","Zita: számla péntek"]
+  if(!p)return ["ügyintézés ma","római jog zh okt 3.","Zita: számla péntek","fodrász jövő kedd"]
     .map(x=>`<button class="qc-chip" data-act="qc-fill" data-x="${esc(x)}">${esc(x)}</button>`).join("");
   if(p.kind==="note")
     return `<span class="qc-tag">Jegyzet</span> <span>Nem találtam dátumot — gyorsjegyzetként mentem:</span> <b>${esc(p.title)}</b>`;
   const d=parse(p.date),c=countLabel(p.date);
   const where=p.kind==="client"?`${esc(client(p.clientId).name)} · ügyfél-teendő`
     :p.kind==="subject"?`${esc(subj(area(p.areaId),p.subjId).name)} · ${esc(area(p.areaId).name)}`
+    :p.kind==="own"?"saját teendő"
     :`${esc(area(p.areaId).name)} · iskola-szintű`;
-  return `<span class="type-badge t-${p.kind==="client"?"beadando":p.type}">${p.kind==="client"?"Teendő":TYPES[p.type]}</span>
+  return `<span class="type-badge t-${p.kind==="client"?"feladat":p.type}">${p.kind==="client"?"Feladat":TYPES[p.type]}</span>
     <b>${esc(p.title)}</b> <span class="qc-where">→ ${where}</span>
     <span class="count ${c.cls}">${d.getFullYear()}. ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}. · ${c.txt}</span>`;
 }
@@ -822,10 +830,10 @@ function quickCapture(){
   const q=UI.qc||"";
   return `<div class="card qc">
     <div class="qc-head">${ic("spark","")} <b>Gyorsjegyzet</b>
-      <span>Írd le egy mondatban — magától a naptárba és a tárgyhoz kerül.</span></div>
+      <span>Írd le, ahogy jön — a dátumot felismeri, a többit úgy hagyja, ahogy írod.</span></div>
     <div class="qc-row">
       <input id="qcInput" class="qc-input" data-bind="qc" value="${esc(q)}" autocomplete="off"
-        placeholder="pl. római jog zh okt 3.  ·  alkotmányjog beadandó jövő kedd  ·  Zita: számla péntek">
+        placeholder="pl. bevásárlás ma  ·  római jog zh okt 3.  ·  Zita: számla péntek">
       <button class="btn btn-primary" data-act="qc-add">${ic("check","")} Hozzáadás</button>
     </div>
     <div class="qc-out" id="qcPreview">${qcOut(q)}</div>
@@ -845,6 +853,9 @@ function qcCommit(){
     const sj=subj(area(p.areaId),p.subjId);
     sj.exams.push({id:uid(),title:p.title,type:p.type,date:p.date,done:false});
     toast(`${TYPES[p.type]} felvéve: ${sj.name} · ${p.date}`);
+  }else if(p.kind==="own"){
+    STATE.tasks.push({id:uid(),title:p.title,type:p.type,date:p.date,done:false});
+    toast(`Teendő felvéve: ${p.title} · ${p.date}`);
   }else{
     addExamToArea(area(p.areaId),{id:uid(),title:p.title,type:p.type,date:p.date,done:false});
     toast(`Esemény felvéve: ${area(p.areaId).name} · ${p.date}`);
@@ -1025,8 +1036,16 @@ function emptyState(icon,title,text,btn,act,id){
 }
 
 /* ============ modal ============ */
+let modalGen=0,modalT=null;
+function openModalShell(){modalGen++;clearTimeout(modalT);return modalGen;}
+function closeModal(gen){
+  if(gen!==undefined&&gen!==modalGen)return;
+  const bg=$("#modalBg");bg.classList.remove("on");
+  const g=modalGen;modalT=setTimeout(()=>{if(g===modalGen)bg.innerHTML="";},200);
+}
 function modal(title,fields,onSubmit,opts){
   opts=opts||{};
+  const gen=openModalShell();
   const bg=$("#modalBg");
   bg.innerHTML=`<div class="modal"><h3>${esc(title)}</h3><div id="mfields">
     ${fields.map(f=>{
@@ -1043,7 +1062,7 @@ function modal(title,fields,onSubmit,opts){
   let pickedColor=AREA_COLORS[0];
   bg.querySelectorAll(".swatch-pick").forEach(b=>b.onclick=()=>{bg.querySelectorAll(".swatch-pick").forEach(x=>x.classList.remove("active"));b.classList.add("active");pickedColor=b.dataset.color;});
   bg.classList.add("on");
-  const close=()=>{bg.classList.remove("on");setTimeout(()=>bg.innerHTML="",200);};
+  const close=()=>closeModal(gen);
   bg.querySelector("[data-mclose]").onclick=close;
   bg.onclick=e=>{if(e.target===bg)close();};
   const first=bg.querySelector("input,select,textarea");if(first)setTimeout(()=>first.focus(),60);
@@ -1058,6 +1077,34 @@ function modal(title,fields,onSubmit,opts){
   if(opts.jump)bg.querySelector("[data-mjump]").onclick=()=>{close();opts.jump.fn();};
   bg.querySelectorAll("input").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter")submit();}));
 }
+function openDayModal(){
+  const ds=UI.day; if(!ds)return;
+  const gen=openModalShell();
+  const d=parse(ds), c=countLabel(ds);
+  const list=allExams().filter(e=>e.date===ds).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+  const bg=$("#modalBg");
+  bg.innerHTML=`<div class="modal" style="width:min(540px,100%)">
+    <h3>${d.getFullYear()}. ${MONTHS[d.getMonth()]} ${d.getDate()}.</h3>
+    <div style="font-size:12.5px;color:var(--muted);margin:-10px 0 16px">
+      ${DOW_FULL[(d.getDay()+6)%7]} · ${c.txt} · ${list.length} teendő</div>
+    <div class="day-list">
+    ${list.length?list.map(e=>`<div class="list-row ${e.done?"done":""}">
+        <button class="chk ${e.done?"on":""}" data-act="day-toggle" data-eid="${e.id}">${ic("check","")}</button>
+        <div class="grow" data-act="edit-ev" data-eid="${e.id}" style="cursor:pointer">
+          <div class="tt">${esc(e.title)} <span class="type-badge t-${e.type}">${TYPES[e.type]||""}</span></div>
+          <div class="dd">${esc(e.subjName)} · ${esc(e.areaName)}</div></div>
+        <button class="mini-x" data-act="day-del" data-eid="${e.id}">${ic("trash","")}</button>
+      </div>`).join("")
+    :`<div style="color:var(--faint);font-size:13.5px;padding:8px 0 2px">Erre a napra még nincs teendő.</div>`}
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-soft" data-act="day-add" style="margin-right:auto">${ic("plus","")} Új teendő</button>
+      <button class="btn btn-ghost" data-mclose>Bezár</button></div></div>`;
+  bg.classList.add("on");
+  const closeDay=()=>{UI.day=null;closeModal(gen);};
+  bg.querySelector("[data-mclose]").onclick=closeDay;
+  bg.onclick=e=>{if(e.target===bg)closeDay();};
+}
 function findEvent(id){
   for(const a of STATE.areas){
     for(const su of a.subjects){const e=su.exams.find(x=>x.id===id);
@@ -1067,6 +1114,8 @@ function findEvent(id){
   }
   for(const c of STATE.clients){const t=c.tasks.find(x=>x.id===id);
     if(t)return{ev:t,kind:"task",client:c,list:c.tasks};}
+  const o=STATE.tasks.find(x=>x.id===id);
+  if(o)return{ev:o,kind:"own",list:STATE.tasks};
   return null;
 }
 function openEditModal(id){
@@ -1078,14 +1127,16 @@ function openEditModal(id){
   fields.push({key:"done",label:"Állapot",type:"select",value:f.ev.done?"1":"0",
     options:[{v:"0",t:"Nyitott"},{v:"1",t:"Kész ✓"}]});
   const where=isTask?`${f.client.name} · ügyfél`
+    :f.kind==="own"?"Saját teendő"
     :f.kind==="subject"?`${f.subject.name} · ${f.area.name}`:`${f.area.name} · iskola-szintű`;
   modal("Teendő szerkesztése",fields,d=>{
     f.ev.title=d.title; f.ev.done=d.done==="1";
     if(isTask)f.ev.due=d.date; else{f.ev.date=d.date;f.ev.type=d.type;}
-    save();render();
+    save();render();if(UI.day)openDayModal();
   },{
-    danger:{label:"Törlés",fn:()=>{const i=f.list.indexOf(f.ev);if(i>=0)f.list.splice(i,1);save();render();}},
-    jump:{label:"Megnyitás",fn:()=>{
+    danger:{label:"Törlés",fn:()=>{const i=f.list.indexOf(f.ev);if(i>=0)f.list.splice(i,1);save();render();if(UI.day)openDayModal();}},
+    jump:f.kind==="own"?null:{label:"Megnyitás",fn:()=>{
+      UI.day=null;
       if(isTask)UI={...UI,view:"client",clientId:f.client.id};
       else if(f.kind==="subject")UI={...UI,view:"subject",areaId:f.area.id,subjectId:f.subject.id};
       else UI={...UI,view:"area",areaId:f.area.id,tab:"naptar"};
@@ -1095,7 +1146,9 @@ function openEditModal(id){
   const h=$("#modalBg .modal h3"); if(h)h.insertAdjacentHTML("afterend",
     `<div style="font-size:12.5px;color:var(--muted);margin:-10px 0 14px">${esc(where)}</div>`);
 }
-const examTypeField=(v="zh")=>({key:"type",label:"Típus",type:"select",value:v,options:[{v:"zh",t:"ZH / dolgozat"},{v:"beadando",t:"Beadandó"},{v:"vizsga",t:"Vizsga"},{v:"ora",t:"Óra / esemény"}]});
+const examTypeField=(v="teendo")=>({key:"type",label:"Típus",type:"select",value:v,
+  options:[{v:"teendo",t:"Teendő"},{v:"zh",t:"ZH / dolgozat"},{v:"beadando",t:"Beadandó"},
+    {v:"vizsga",t:"Vizsga"},{v:"ora",t:"Óra / esemény"}]});
 
 /* ============ canvas engine ============ */
 /* Rajzolni CSAK tollal (Apple Pencil) vagy egérrel lehet.
@@ -1275,9 +1328,11 @@ document.addEventListener("click",e=>{
     case"cal-prev":UI.cal.m--;if(UI.cal.m<0){UI.cal.m=11;UI.cal.y--;}render();break;
     case"cal-next":UI.cal.m++;if(UI.cal.m>11){UI.cal.m=0;UI.cal.y++;}render();break;
     case"cal-today":{const n=new Date();UI.cal={y:n.getFullYear(),m:n.getMonth()};render();break;}
-    case"cal-day":{
-      if(UI.view==="diary"||!UI.areaId){openExamModal(null,t.dataset.d,null,true);}
-      else{const a=area(UI.areaId);openExamModal(e2=>{addExamToArea(a,e2);go();},t.dataset.d,a);}
+    case"cal-day":UI.day=t.dataset.d;openDayModal();break;
+    case"day-add":openExamModal(null,UI.day,null,true);break;
+    case"day-toggle":{const f=findEvent(t.dataset.eid);if(f){f.ev.done=!f.ev.done;save();render();openDayModal();}break;}
+    case"day-del":{const f=findEvent(t.dataset.eid);
+      if(f&&confirm("Törlöd ezt a teendőt?")){const i=f.list.indexOf(f.ev);if(i>=0)f.list.splice(i,1);save();render();openDayModal();}
       break;}
 
     case"tool":TOOL.mode=t.dataset.tool;refreshBar();break;
@@ -1298,17 +1353,23 @@ document.addEventListener("keydown",e=>{
 function refreshBar(){const bar=$(".note-bar");if(bar)bar.outerHTML=noteBar();}
 function closeSide(){$("#sidebar").classList.remove("open");$("#scrim").classList.remove("on");}
 function openExamModal(cb,date,areaObj,pickArea){
-  const fields=[{key:"title",label:"Megnevezés",ph:"pl. 1. zárthelyi",required:true},examTypeField(),{key:"date",label:"Dátum",type:"date",value:date||todayStr(),required:true}];
-  if(pickArea)fields.push({key:"area",label:"Iskola",type:"select",value:STATE.areas[0]?.id,options:STATE.areas.map(a=>({v:a.id,t:a.name}))});
-  if(areaObj&&areaObj.subjects.length)fields.splice(3,0,{key:"subj",label:"Tárgy (opcionális)",type:"select",value:"",options:[{v:"",t:"— iskola-szintű —"},...areaObj.subjects.map(s=>({v:s.id,t:s.name}))]});
-  modal("Új ZH / határidő",fields,d=>{
+  const fields=[{key:"title",label:"Megnevezés",ph:"pl. számla kiállítása",required:true},
+    examTypeField(),{key:"date",label:"Dátum",type:"date",value:date||todayStr(),required:true}];
+  if(pickArea)fields.push({key:"area",label:"Hova",type:"select",value:"__own",
+    options:[{v:"__own",t:"Saját teendő"},...STATE.areas.map(a=>({v:a.id,t:a.name}))]});
+  if(areaObj&&areaObj.subjects.length)fields.splice(3,0,{key:"subj",label:"Tárgy (opcionális)",type:"select",value:"",
+    options:[{v:"",t:"— iskola-szintű —"},...areaObj.subjects.map(s=>({v:s.id,t:s.name}))]});
+  modal("Új teendő",fields,d=>{
     const ev={id:uid(),title:d.title,type:d.type,date:d.date,done:false};
-    if(pickArea){const a=area(d.area);addExamToArea(a,ev,d.subj);}
+    if(pickArea){
+      if(d.area==="__own")STATE.tasks.push(ev);
+      else{const a=area(d.area);if(a)addExamToArea(a,ev,d.subj);else STATE.tasks.push(ev);}
+    }
     else if(d.subj){const s=subj(areaObj,d.subj);s.exams.push(ev);}
     else cb(ev,d.subj);
     if(pickArea||d.subj){save();render();}
+    if(UI.day)openDayModal();
   });
-  if(!pickArea&&!(areaObj&&areaObj.subjects.length)){}
 }
 function addExamToArea(a,ev,subjId){
   if(subjId){const s=subj(a,subjId);if(s){s.exams.push(ev);return;}}
