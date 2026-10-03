@@ -218,6 +218,23 @@ h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:560;margin:0;letter-sp
 }
 .paper canvas{display:block;width:100%;height:auto;touch-action:none;aspect-ratio:1000/1400}
 .paper-wrap{position:relative;overflow:hidden;border-radius:10px;touch-action:none;-webkit-user-select:none;user-select:none}
+.paper{container-type:inline-size}
+.tlayer{position:absolute;inset:0;pointer-events:none}
+.titem{position:absolute;max-width:96%}
+.tbox{font-family:"Plus Jakarta Sans",system-ui,sans-serif;line-height:1.5;color:var(--ink);
+  white-space:pre-wrap;overflow-wrap:anywhere;padding:.6cqw .8cqw;border-radius:6px;outline:none;
+  min-height:1.4em;pointer-events:none;-webkit-user-select:text;user-select:text;
+  font-size:calc(var(--fs,24) * 0.1cqw)}
+.tlayer.on .tbox{pointer-events:auto;cursor:text;box-shadow:0 0 0 1px var(--line-2);touch-action:auto}
+.tlayer.on .tbox:focus{box-shadow:0 0 0 1.6px var(--accent);background:rgba(255,255,255,.92)}
+.tbar{position:absolute;top:0;left:0;transform:translateY(-104%);display:none;gap:3px;
+  background:#fff;border:1px solid var(--line-2);border-radius:9px;padding:3px;box-shadow:var(--shadow);z-index:3}
+.tlayer.on .tbar{display:flex;opacity:.55;transition:opacity .12s}
+.tlayer.on .titem:hover .tbar,.tlayer.on .titem:focus-within .tbar{opacity:1}
+.tbar .tb{pointer-events:auto;width:24px;height:22px;border-radius:6px;font-size:11px;font-weight:700;
+  color:var(--muted);display:grid;place-items:center;line-height:1}
+.tbar .tb:hover{background:var(--accent-soft);color:var(--accent-deep)}
+.tbar .tb.drag{cursor:grab;touch-action:none}
 .paper-wrap .paper{transform-origin:0 0;will-change:transform}
 .zoomctl{display:flex;align-items:center;gap:4px;margin-left:8px}
 .zoomctl .pg-btn{width:28px;height:28px}
@@ -383,7 +400,8 @@ const I={
   check:'<path d="M5 12l5 5 9-11"/>',
   grad:'<path d="M22 10 12 5 2 10l10 5z"/><path d="M6 12v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/>',
   clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-  spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>'
+  spark:'<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+  type:'<path d="M5 6.5h14"/><path d="M12 6.5V19"/><path d="M9 19h6"/>'
 };
 const ic=(n,cls="ico")=>`<svg class="${cls}" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
 
@@ -675,10 +693,10 @@ function viewSubject(){
 
     <div class="notes">
       <div class="sec-head"><h2 style="display:flex;align-items:center;gap:9px">${ic("pen","")} Jegyzetfüzet</h2>
-        <span style="font-size:12.5px;color:var(--muted)">Írni csak Apple Pencillel · ujjal nagyítás</span></div>
+        <span style="font-size:12.5px;color:var(--muted)">Kézírás Apple Pencillel · gépelt szöveg a <b>T</b> eszközzel</span></div>
       ${noteBar()}
       <div class="note-stage">
-        <div class="paper-wrap" id="paperWrap"><div class="paper" id="paperEl"><canvas id="pad"></canvas></div></div>
+        <div class="paper-wrap" id="paperWrap"><div class="paper" id="paperEl"><canvas id="pad"></canvas>${textLayer(s.notes)}</div></div>
         <div class="note-foot">
           <button class="pg-btn" data-act="note-prev">${ic("chevL","")}</button>
           <span>Oldal <b id="pgNum">${s.notes.cur+1}</b> / <span id="pgTot">${s.notes.pages.length}</span></span>
@@ -686,6 +704,7 @@ function viewSubject(){
           <button class="btn btn-soft sm" data-act="note-addpage" style="margin-left:8px">${ic("plus","")} Új oldal</button>
           ${zoomCtl()}
         </div>
+        <div class="pen-hint">${ic("type","")} Gépelt szöveghez válaszd a <b>T</b> eszközt és koppints a lapra, vagy illeszd be a vágólapról (Cmd+V). A dobozok mozgathatók, a betűméret állítható.</div>
       </div>
     </div>
   </div>`;
@@ -705,6 +724,8 @@ function noteBar(){
     <button class="tool ${TOOL.mode==="pen"?"active":""}" data-act="tool" data-tool="pen" title="Toll">${ic("pen","")}</button>
     <button class="tool ${TOOL.mode==="hl"?"active":""}" data-act="tool" data-tool="hl" title="Szövegkiemelő">${ic("hl","")}</button>
     <button class="tool ${TOOL.mode==="eraser"?"active":""}" data-act="tool" data-tool="eraser" title="Radír">${ic("eraser","")}</button>
+    <button class="tool ${TOOL.mode==="text"?"active":""}" data-act="tool" data-tool="text" title="Szöveg — koppints a lapra, vagy illeszd be (Cmd+V)">${ic("type","")}</button>
+    <button class="btn btn-soft sm" data-act="tx-add">${ic("plus","")} Szöveg</button>
     <div class="sep"></div>
     ${PEN_COLORS.map(c=>`<button class="swatch ${TOOL.color===c?"active":""}" data-act="pen-color" data-c="${c}" style="background:${c}"></button>`).join("")}
     <div class="sep"></div>
@@ -903,7 +924,7 @@ function viewJournal(){
   const body = kez
     ? `${noteBar()}
       <div class="note-stage" style="padding:0;border:0;box-shadow:none;margin-top:12px">
-        <div class="paper-wrap" id="paperWrap"><div class="paper" id="paperEl"><canvas id="pad"></canvas></div></div>
+        <div class="paper-wrap" id="paperWrap"><div class="paper" id="paperEl"><canvas id="pad"></canvas>${textLayer(e.notes)}</div></div>
         <div class="note-foot">
           <button class="pg-btn" data-act="note-prev">${ic("chevL","")}</button>
           <span>Oldal <b>${(e.notes.cur||0)+1}</b> / <span>${e.notes.pages.length}</span></span>
@@ -911,7 +932,7 @@ function viewJournal(){
           <button class="btn btn-soft sm" data-act="note-addpage" style="margin-left:8px">${ic("plus","")} Új oldal</button>
           ${zoomCtl()}
         </div>
-        <div class="pen-hint">${ic("pen","")} Írni csak <b>Apple Pencillel</b> lehet — az ujjaddal nagyíthatsz (két ujj) és görgethetsz.</div>
+        <div class="pen-hint">${ic("pen","")} Kézírás csak <b>Apple Pencillel</b> · két ujjal nagyítás · gépelt szöveghez a <b>T</b> eszköz vagy a beillesztés (Cmd+V).</div>
       </div>`
     : `<textarea class="jr-text" data-bind="journal" data-date="${today}" placeholder="Írj szabadon… senki más nem látja.">${esc(e.text||"")}</textarea>
       <div class="pen-hint">${ic("spark","")} iPaden Apple Pencillel <b>közvetlenül ebbe a mezőbe is írhatsz</b> — az iPadOS Scribble szöveggé alakítja.</div>`;
@@ -1191,6 +1212,7 @@ function initCanvas(){
     if(e.pointerType==="touch")return;          // ujjal soha nem írunk
     e.preventDefault();cvs.setPointerCapture(e.pointerId);
     const pt=toLocal(e);
+    if(TOOL.mode==="text"){addTextBox(pt.x/LW*100,pt.y/LH*100,"");return;}
     if(TOOL.mode==="eraser"){erasing=true;eraseAt(pt);return;}
     drawing=true;cur={tool:TOOL.mode,color:TOOL.color,size:TOOL.size,points:[pt]};
   };
@@ -1214,6 +1236,7 @@ function initCanvas(){
   const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   wrap.onpointerdown=e=>{
     if(e.pointerType!=="touch")return;
+    if(e.target.closest&&e.target.closest(".titem"))return;   // szövegdobozt ne vegyük el
     touches.set(e.pointerId,{x:e.clientX,y:e.clientY,px:e.clientX,py:e.clientY});
     if(touches.size===2){
       const t=[...touches.values()];
@@ -1222,7 +1245,7 @@ function initCanvas(){
   };
   wrap.onpointermove=e=>{
     if(e.pointerType!=="touch")return;
-    const t=touches.get(e.pointerId);if(!t)return;
+    const t=touches.get(e.pointerId);if(!t)return;   // csak a nálunk indult érintések
     t.px=t.x;t.py=t.y;t.x=e.clientX;t.y=e.clientY;
     const r=wrap.getBoundingClientRect();
     if(touches.size>=2&&pinch){
@@ -1244,9 +1267,45 @@ function initCanvas(){
   };
   wrap.onpointerup=tend;wrap.onpointercancel=tend;wrap.onpointerleave=tend;
 }
+function ensureTexts(h){
+  if(!h)return h;
+  h.tpages=h.tpages||[];
+  while(h.tpages.length<h.pages.length)h.tpages.push([]);
+  return h;
+}
 function noteHost(){
-  if(UI.view==="journal")return journalEntry(todayStr(),true).notes;
-  const s=curSubject();return s?s.notes:null;
+  if(UI.view==="journal")return ensureTexts(journalEntry(todayStr(),true).notes);
+  const s=curSubject();return s?ensureTexts(s.notes):null;
+}
+const textPage=()=>{const h=noteHost();return h?(h.tpages[h.cur]=h.tpages[h.cur]||[]):[];};
+const findText=tid=>textPage().find(t=>t.id===tid);
+function addTextBox(x,y,txt){
+  const it={id:uid(),x:clamp(x,0,92),y:clamp(y,0,96),w:60,fs:24,text:txt||""};
+  textPage().push(it);save();
+  if(TOOL.mode!=="text"){TOOL.mode="text";}
+  render();
+  setTimeout(()=>{
+    const el=document.querySelector(`.tbox[data-tid="${it.id}"]`);
+    if(el){el.focus();
+      const r=document.createRange();r.selectNodeContents(el);r.collapse(false);
+      const sel=getSelection();sel.removeAllRanges();sel.addRange(r);}
+  },30);
+  return it;
+}
+function textLayer(h){
+  ensureTexts(h);
+  const items=(h&&h.tpages[h.cur])||[];
+  return `<div class="tlayer ${TOOL.mode==="text"?"on":""}" id="tlayer">${items.map(t=>`
+    <div class="titem" data-tid="${t.id}" style="left:${t.x}%;top:${t.y}%;width:${t.w||60}%">
+      <div class="tbar">
+        <button class="tb drag" data-act="tx-drag" data-tid="${t.id}" title="Mozgatás">⠿</button>
+        <button class="tb" data-act="tx-small" data-tid="${t.id}" title="Kisebb betű">A−</button>
+        <button class="tb" data-act="tx-big" data-tid="${t.id}" title="Nagyobb betű">A+</button>
+        <button class="tb" data-act="tx-del" data-tid="${t.id}" title="Törlés">✕</button>
+      </div>
+      <div class="tbox" contenteditable="true" spellcheck="false" data-bind="note-text" data-tid="${t.id}"
+        style="--fs:${t.fs||24}">${esc(t.text||"")}</div>
+    </div>`).join("")}</div>`;
 }
 const page=()=>{const h=noteHost();return h?h.pages[h.cur]:[];};
 function strokeStyle(st){
@@ -1340,21 +1399,74 @@ document.addEventListener("click",e=>{
       if(f&&confirm("Törlöd ezt a teendőt?")){const i=f.list.indexOf(f.ev);if(i>=0)f.list.splice(i,1);save();render();openDayModal();}
       break;}
 
-    case"tool":TOOL.mode=t.dataset.tool;refreshBar();break;
+    case"tool":{TOOL.mode=t.dataset.tool;refreshBar();
+      const tl=$("#tlayer");if(tl)tl.classList.toggle("on",TOOL.mode==="text");break;}
+    case"tx-add":{const h=noteHost();if(h)addTextBox(18,18+Math.min(60,textPage().length*8),"");break;}
+    case"tx-del":{const tp=textPage(),i=tp.findIndex(x=>x.id===t.dataset.tid);
+      if(i>=0&&(!(tp[i].text||"").trim()||confirm("Törlöd ezt a szövegdobozt?"))){tp.splice(i,1);save();render();}
+      break;}
+    case"tx-small":{const it=findText(t.dataset.tid);
+      if(it){it.fs=Math.max(12,(it.fs||24)-4);save();
+        const el=document.querySelector(`.tbox[data-tid="${it.id}"]`);if(el)el.style.setProperty("--fs",it.fs);}
+      break;}
+    case"tx-big":{const it=findText(t.dataset.tid);
+      if(it){it.fs=Math.min(90,(it.fs||24)+4);save();
+        const el=document.querySelector(`.tbox[data-tid="${it.id}"]`);if(el)el.style.setProperty("--fs",it.fs);}
+      break;}
     case"pen-color":TOOL.color=t.dataset.c;if(TOOL.mode==="eraser")TOOL.mode="pen";refreshBar();break;
     case"pen-size":TOOL.size=Number(t.dataset.s);refreshBar();break;
     case"zoom-in":zoomBy(1.35);break;
     case"zoom-out":zoomBy(1/1.35);break;
     case"note-undo":{const pg=page();if(pg.length){pg.pop();redraw();save();}break;}
-    case"note-clear":if(page().length&&confirm("Törlöd ennek az oldalnak a tartalmát?")){const h=noteHost();h.pages[h.cur]=[];redraw();save();}break;
-    case"note-addpage":{const h=noteHost();h.pages.push([]);h.cur=h.pages.length-1;save();render();break;}
+    case"note-clear":if((page().length||textPage().length)&&confirm("Törlöd ennek az oldalnak a tartalmát?")){
+      const h=noteHost();h.pages[h.cur]=[];h.tpages[h.cur]=[];save();render();}break;
+    case"note-addpage":{const h=noteHost();h.pages.push([]);h.tpages.push([]);h.cur=h.pages.length-1;save();render();break;}
     case"note-prev":{const h=noteHost();if(h.cur>0){h.cur--;save();render();}break;}
     case"note-next":{const h=noteHost();if(h.cur<h.pages.length-1){h.cur++;save();render();}break;}
   }
 });
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"&&e.target&&e.target.id==="qcInput"){e.preventDefault();qcCommit();}
+  if(e.key==="Escape"&&e.target&&e.target.classList&&e.target.classList.contains("tbox"))e.target.blur();
 });
+
+/* beillesztés: a szövegdobozba sima szövegként, üres lapra új dobozként */
+document.addEventListener("paste",e=>{
+  const box=e.target&&e.target.closest?e.target.closest(".tbox"):null;
+  const txt=(e.clipboardData||window.clipboardData).getData("text/plain");
+  if(box){
+    e.preventDefault();
+    document.execCommand("insertText",false,txt);
+    const it=findText(box.dataset.tid);
+    if(it){it.text=box.innerText;save();}
+    return;
+  }
+  if(!txt||!txt.trim())return;
+  if(!$("#pad"))return;                                   // csak a jegyzetlapon
+  const t=e.target;
+  if(t&&t.closest&&t.closest("input,textarea,[contenteditable='true']"))return;
+  e.preventDefault();
+  addTextBox(10,10,txt.replace(/\r/g,""));
+  toast("Szöveg beillesztve a lapra.");
+});
+
+/* szövegdoboz mozgatása */
+let txDrag=null;
+document.addEventListener("pointerdown",e=>{
+  const h=e.target.closest&&e.target.closest('[data-act="tx-drag"]');if(!h)return;
+  const item=findText(h.dataset.tid),paper=$("#paperEl");if(!item||!paper)return;
+  e.preventDefault();
+  txDrag={item,el:h.closest(".titem"),sx:e.clientX,sy:e.clientY,ox:item.x,oy:item.y,rect:paper.getBoundingClientRect()};
+},true);
+document.addEventListener("pointermove",e=>{
+  if(!txDrag)return;
+  const r=txDrag.rect;
+  const nx=clamp(txDrag.ox+((e.clientX-txDrag.sx)/r.width)*100,0,92);
+  const ny=clamp(txDrag.oy+((e.clientY-txDrag.sy)/r.height)*100,0,97);
+  txDrag.item.x=nx;txDrag.item.y=ny;
+  txDrag.el.style.left=nx+"%";txDrag.el.style.top=ny+"%";
+});
+document.addEventListener("pointerup",()=>{if(txDrag){txDrag=null;save();}});
 function refreshBar(){const bar=$(".note-bar");if(bar)bar.outerHTML=noteBar();}
 function closeSide(){$("#sidebar").classList.remove("open");$("#scrim").classList.remove("on");}
 function openExamModal(cb,date,areaObj,pickArea){
@@ -1385,6 +1497,8 @@ function addExamToArea(a,ev,subjId){
 document.addEventListener("input",e=>{
   const el=e.target.closest("[data-bind]");if(!el)return;
   const b=el.dataset.bind,val=el.value!==undefined?el.value:el.textContent;
+  if(b==="note-text"){const it=findText(el.dataset.tid);
+    if(it){it.text=el.innerText;clearTimeout(window.__sv);window.__sv=setTimeout(save,500);}return;}
   if(b==="qc"){UI.qc=val;const pv=$("#qcPreview");if(pv)pv.innerHTML=qcOut(val);return;}
   if(b==="journal"){journalEntry(el.dataset.date,true).text=val;clearTimeout(window.__sv);window.__sv=setTimeout(save,400);return;}
   if(b==="teacher")curSubject().teacher=val;

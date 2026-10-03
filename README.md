@@ -39,7 +39,12 @@ szabályokkal — nincs mögötte szerver, se API-kulcs.
 ## Jegyzetfüzet és kézírás
 
 Kézírásos vászon tárgyanként és a naplóban is: toll, szövegkiemelő, radír, több oldal,
-Apple Pencil nyomásérzékenységgel.
+Apple Pencil nyomásérzékenységgel — **gépelt szöveggel vegyesen**.
+
+- A **T (Szöveg)** eszközzel a lapra koppintva szövegdoboz nyílik: bele lehet gépelni,
+  mozgatni, a betűméretet állítani, törölni. A kézírás és a gépelt szöveg ugyanazon az oldalon él.
+- **Beillesztés**: a vágólap tartalma (Cmd/Ctrl+V) dobozba fókuszálva sima szövegként kerül be,
+  a lapra illesztve pedig új szövegdobozt nyit.
 
 - **Írni csak tollal (Apple Pencil) vagy egérrel lehet** — az ujj soha nem hagy nyomot.
 - **Két ujjal nagyítás** a lapon (100–500%), egy ujjal eltolás nagyított lapon,
